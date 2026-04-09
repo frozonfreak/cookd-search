@@ -42,4 +42,14 @@ class User extends Authenticatable
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
+
+    public function tasteProfile()
+    {
+        return $this->hasOne(UserTasteProfile::class);
+    }
+
+    public function interactions()
+    {
+        return $this->hasMany(UserInteraction::class);
+    }
 }

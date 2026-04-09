@@ -15,6 +15,10 @@ class DSLBuilderPipe
                 'any' => $context->entities['ingredients']['include_any'],
             ],
             'exclude' => $context->entities['ingredients']['exclude'],
+            'ingredient_relations' => $context->entities['ingredient_relations'],
+            'quantity_constraints' => $context->entities['ingredients']['quantity_constraints'],
+            'nutrition' => $context->entities['nutrition'],
+            'taste_preferences' => $context->entities['taste_preferences'],
             'time' => [
                 'max' => $context->entities['time']['max'],
             ],
@@ -24,6 +28,13 @@ class DSLBuilderPipe
             'inventory' => [],
             'strict' => (bool) ($context->scoring['modifiers']['strict_mode'] ?? false),
             'scoring' => $context->scoring,
+            'rewrite' => $context->rewrite,
+            'semantic' => [
+                'query_text' => $context->rewrittenQuery ?? $context->cleanedQuery,
+                'query_embedding' => $context->semantic['query_embedding'],
+                'weight' => $context->semantic['weight'] ?? 0.35,
+            ],
+            'personalization' => $context->personalization,
         ];
 
         $context->log('dsl_builder', [

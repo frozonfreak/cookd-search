@@ -1,317 +1,391 @@
-You are a senior backend engineer specializing in Laravel 13 and PostgreSQL.
+You are a senior Laravel 13 + PostgreSQL backend architect.
 
-Design and implement a **production-grade recipe search backend** that supports:
+Design and implement a **production-grade recipe search engine** that behaves like an intelligent food decision system.
 
-- ingredient normalization
+The system must support:
+
+- ingredient normalization + relationships
 - DSL-based querying (AND / OR / EXCLUDE)
-- high-performance PostgreSQL search
-- NLP-based query understanding
-- dynamic scoring + ranking (intent-aware)
-- future AI/semantic extensibility
-
-The system must be modular, scalable, explainable, and optimized for read-heavy workloads.
+- quantity-aware ingredient matching
+- nutrition-aware filtering
+- taste profile modeling
+- NLP-based query understanding (pipeline architecture)
+- dynamic scoring (intent-aware ranking)
+- explainable results
 
 ---
 
-## CORE ARCHITECTURE (IMPORTANT)
-
-The system must follow this flow:
+# CORE ARCHITECTURE
 
 Natural Language Query
-→ NLP Pipeline (Laravel Pipeline pattern)
+→ NLP Pipeline (Laravel Pipeline)
 → QueryContext DTO
 → DSL
-→ Dynamic Scoring Engine
+→ SQL Query + Dynamic Scoring
 → Ranked Results
 
-This is NOT a simple filter system.
+---
+
+# PART 1: DATABASE SCHEMA (POSTGRESQL)
+
+Follow strict best practices:
+
+- Use **columns for frequently queried fields**
+- Use **JSONB only for flexible fields**
+- Use **GIN indexes for arrays/JSONB**
+- Avoid putting core filters inside JSONB
 
 ---
 
-## PART 1: DATABASE SCHEMA (POSTGRESQL)
+## TABLE: recipes
 
-[KEEP EXACTLY AS PROVIDED — DO NOT MODIFY STRUCTURE]
+Columns:
 
-(Use the schema, indexes, constraints exactly as defined in original prompt)
+- id (bigint PK)
+- title (text)
+- normalized_title (text, indexed)
+
+### Structured fields (HOT PATH)
+
+- dish_type (text, indexed)
+- cooking_time (int, indexed)
+- dietary (text nullable)
+
+### Nutrition (IMPORTANT)
+
+- calories FLOAT
+- fat FLOAT
+- protein FLOAT
+- sodium FLOAT
+
+### Ingredient arrays
+
+- ingredients TEXT[]
+- ingredient_ids INT[]
+
+### Flexible fields
+
+- meal_type JSONB
+- cuisine JSONB
+- nutrition JSONB
+- taste_profile JSONB
+
+### Timestamps
+
+- created_at
+- updated_at
 
 ---
 
-## PART 2: INGREDIENT NORMALIZATION LAYER
+## TABLE: recipe_ingredients
 
-[KEEP AS PROVIDED]
+- recipe_id
+- ingredient_id
 
-Additionally:
+### Quantity (CRITICAL)
 
-- Must integrate into NLP pipeline (not standalone)
-- Must map aliases BEFORE DSL generation
+- quantity_value FLOAT (0–1 normalized)
+- quantity_text TEXT
+- unit TEXT
 
 ---
 
-## PART 3: NLP PIPELINE (CRITICAL)
+## TABLE: ingredients
 
-Implement using:
+- id
+- name (canonical)
+- group_id
 
-Illuminate\Pipeline\Pipeline
+---
 
-Create:
+## TABLE: ingredient_aliases
 
-App\Services\QueryPipeline
+- id
+- alias
+- ingredient_id
 
-### Pipeline Stages (ORDER MATTERS)
+---
+
+## TABLE: ingredient_relations
+
+- ingredient_id
+- related_ingredient_id
+- relation_type (similar | substitute | weak_substitute)
+- strength FLOAT
+
+---
+
+## INDEXING
+
+- GIN on ingredients arrays
+- GIN on JSONB fields
+- B-tree on cooking_time, dish_type, nutrition columns
+
+---
+
+# PART 2: NLP PIPELINE
+
+Use Laravel Pipeline:
+
+Stages:
 
 1. PreprocessPipe
 2. TokenizePipe
 3. OperatorClassificationPipe
 4. PhraseChunkingPipe
 5. EntityExtractionPipe
-6. IngredientNormalizationPipe
+6. IngredientResolutionPipe
 7. IntentDetectionPipe
-8. ScoringProfilePipe <-- NEW
+8. ScoringProfilePipe
 9. DSLBuilderPipe
 
 ---
 
-## PART 4: QUERY CONTEXT DTO (EXPANDED)
+# PART 3: QUERY CONTEXT DTO
 
-Create:
+Must store:
 
-App\DTO\QueryContext
-
-Must include:
-
-- rawQuery, cleanedQuery
-
-- tokens, classifiedTokens
+- tokens, classified tokens
 
 - phrases, ngrams
 
-- entities:
-    - ingredients:
-        - include_all
-        - include_any
-        - exclude
-        - raw_detected
+- ingredients:
+    - include_all
+    - include_any
+    - exclude
+    - quantity constraints
 
-    - time (max, raw)
-    - meal_type
-    - dish_type
-    - dietary
+- ingredient_relations:
+    - exact
+    - strong substitutes
+    - weak substitutes
 
-- normalized:
-    - ingredients
-    - failed_matches
+- nutrition constraints
 
-- intent + intentConfidence
+- taste preferences
 
-- scoring:
-    - weights (dynamic)
-    - modifiers (strict_mode, boost_exact_match)
+- intent + confidence
 
-- confidence map
+- scoring weights
 
 - DSL output
 
-- debug logs (per pipe)
-
-DTO must:
-
-- be mutable
-- track state across pipeline
-- support debugging
+- debug logs
 
 ---
 
-## PART 5: ENTITY EXTRACTION RULES
+# PART 4: INGREDIENT RESOLUTION
 
-Must correctly parse:
+Must support:
 
-"recipes with onion but no garlic"
+### Alias normalization
 
-Output:
+"curd" → "yogurt"
 
-- include_all: ["onion"]
-- exclude: ["garlic"]
+### Relationship handling
 
-Operators MUST NOT leak into ingredient phrases.
+- similar (broad match)
+- substitute (strong)
+- weak substitute (low confidence)
 
----
+### Rules:
 
-## PART 6: INTENT DETECTION
+INCLUDE:
 
-Detect:
+- allow substitutes
+- allow weak substitutes (lower score)
 
-1. quick_search
-    - keywords: quick, fast, under X mins
+EXCLUDE:
 
-2. ingredient_strict
-    - pattern: "with X but no Y"
-
-3. exploratory
-    - vague queries
-
-Store:
-
-- intent
-- intentConfidence (0–1)
+- exclude exact + strong substitutes
+- DO NOT exclude weak substitutes
 
 ---
 
-## PART 7: SCORING PROFILE (NLP + RANKING FUSION)
+# PART 5: QUANTITY-AWARE SEARCH
 
-Create ScoringProfilePipe.
+Support phrases:
 
-Map intent → weights:
+- "no onion" → 0.0
+- "little onion" → max 0.3
+- "extra onion" → min 0.7
 
-quick_search:
-
-- time weight HIGH
-- ingredient weight MEDIUM
-
-ingredient_strict:
-
-- ingredient weight VERY HIGH
-- exclude penalty HARD
-
-exploratory:
-
-- popularity HIGH
-- recency HIGH
-
-Apply:
-
-context.scoring.weights = dynamic weights × intentConfidence
-
----
-
-## PART 8: QUERY ENGINE (POSTGRESQL)
-
-Use array operators:
-
-- @> (contains)
-- && (overlap)
-- NOT @> (exclude)
-
-Use Laravel Query Builder + raw SQL for scoring.
-
----
-
-## PART 9: DYNAMIC SCORING ENGINE
-
-Score must be computed in SQL.
-
-### Formula:
-
-score =
-(ingredient_all_score \* :w_all)
-
-- (ingredient_any_score \* :w_any)
-- (time_score \* :w_time)
-- (popularity_score \* :w_pop)
-- (recency_score \* :w_rec)
-
-* exclude_penalty
-
-Weights come from QueryContext.
-
----
-
-## PART 10: CONFIDENCE-AWARE ADJUSTMENT
-
-If NLP confidence is low:
-
-- reduce strict filters
-- increase popularity weight
-- allow broader matches
-
----
-
-## PART 11: EXPLAINABLE OUTPUT
-
-Return:
+Store in DSL:
 
 {
-"score": number,
-"breakdown": {
-"ingredients": number,
-"time": number,
-"popularity": number,
-"recency": number
-},
-"intent": "detected_intent"
+ingredient: "onion",
+quantity: { min: X, max: Y, target: Z }
 }
 
 ---
 
-## PART 12: LARAVEL IMPLEMENTATION
+# PART 6: NUTRITION-AWARE SEARCH
 
-Generate:
+Parse:
 
-1. Migrations:
-    - recipes
-    - ingredients
-    - ingredient_aliases
-    - indexes (separate)
+- "low oil" → fat <= threshold
+- "low sodium"
+- "high protein"
 
-2. Models:
-    - Recipe
-    - Ingredient
-    - IngredientAlias
+DSL:
 
-3. Services:
-    - QueryPipeline
-    - IngredientNormalizerService
-    - RecipeSearchService
-    - (optional) ScoringEngine
+{
+nutrition: {
+fat: { max: 10 },
+protein: { min: 20 }
+}
+}
 
-4. Pipeline Pipes (separate classes)
+Use columns for filtering.
 
 ---
 
-## PART 13: PERFORMANCE REQUIREMENTS
+# PART 7: TASTE PROFILE MODELING
 
-- Use GIN indexes for arrays
+Each recipe has:
 
-- Avoid JSONB in hot filters
+taste_profile JSONB:
 
-- Precompute:
-    - cooking_time
-    - popularity_score (optional)
+{
+spicy: 0.8,
+tangy: 0.5,
+sweet: 0.2,
+rich: 0.7
+}
 
-- Ensure queries are optimized (EXPLAIN ANALYZE)
+NLP extracts:
+
+"spicy tangy curry" →
+
+{
+spicy: 0.9,
+tangy: 0.6
+}
 
 ---
 
-## PART 14: DEBUGGING + OBSERVABILITY
+# PART 8: QUERY ENGINE
 
-Each pipeline stage must:
+Use PostgreSQL:
 
-- log input/output
-- append to context.debug
-
-System must be fully inspectable.
+- array operators (@>, &&)
+- EXISTS for ingredient checks
+- numeric filters for nutrition
+- JSONB for taste
 
 ---
 
-## PART 15: OUTPUT REQUIREMENTS
+# PART 9: SCORING ENGINE (FUSION)
+
+Score =
+
+ingredient_score
+
+- quantity_score
+- nutrition_score
+- taste_score
+- time_score
+- popularity_score
+- recency_score
+
+---
+
+## Quantity scoring
+
+1 - ABS(actual - target)
+
+---
+
+## Taste scoring
+
+1 - ABS(actual - requested)
+
+---
+
+## Nutrition scoring
+
+penalize exceeding limits
+
+---
+
+## Ingredient scoring
+
+- exact > substitute > weak substitute
+
+---
+
+# PART 10: INTENT-AWARE SCORING
+
+Detect:
+
+- quick_search → boost time
+- ingredient_strict → boost ingredient match
+- healthy → boost nutrition
+- flavor-focused → boost taste
+
+Apply dynamic weights.
+
+---
+
+# PART 11: CONFIDENCE HANDLING
+
+If low confidence:
+
+- relax filters
+- boost popularity
+- widen matches
+
+---
+
+# PART 12: EXPLAINABLE OUTPUT
 
 Return:
 
-1. Laravel migrations
-2. Models with casts
-3. Full pipeline implementation (all pipes)
-4. Services
-5. Example query flow
-6. Example input → DSL → SQL → output
+{
+score,
+breakdown: {
+ingredients,
+quantity,
+nutrition,
+taste,
+time
+},
+intent
+}
 
 ---
 
-## GOAL
+# PART 13: LARAVEL IMPLEMENTATION
 
-Build a system that behaves like a real search engine:
+Generate:
+
+- migrations
+- models
+- pipeline pipes
+- QueryPipeline service
+- RecipeSearchService
+- IngredientResolutionService
+
+---
+
+# PART 14: PERFORMANCE
+
+- Use GIN indexes for arrays/JSONB
+- Use columns for hot filters
+- Avoid JSONB for frequent WHERE clauses
+- Ensure EXPLAIN ANALYZE passes
+
+---
+
+# GOAL
+
+Build a system that:
 
 - understands natural language
-- extracts structured intent
-- dynamically adapts ranking
+- models ingredients, nutrition, and taste
+- adapts ranking dynamically
 - produces explainable results
 
-NOT a static filtering backend.
+This is NOT a CRUD filter system.
+
+This is a **food intelligence engine**.

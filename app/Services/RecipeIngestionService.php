@@ -12,6 +12,11 @@ use RuntimeException;
 
 class RecipeIngestionService
 {
+    public function __construct(
+        private readonly EmbeddingService $embeddingService,
+    ) {
+    }
+
     /**
      * @return array{processed:int, created:int, updated:int}
      */
@@ -32,6 +37,8 @@ class RecipeIngestionService
             ->sortBy(fn ($file) => $file->getFilename())
             ->each(function ($file) use (&$processed, &$created, &$updated): void {
                 $record = $this->mapRecipe($this->decodeFile($file->getPathname()));
+                $recipeIngredients = $record['recipe_ingredients'];
+                unset($record['recipe_ingredients']);
 
                 $recipe = Recipe::query()->find($record['id']);
 
@@ -43,6 +50,7 @@ class RecipeIngestionService
                 }
 
                 $recipe->forceFill($record)->save();
+                $this->syncRecipeIngredients($recipe->id, $recipeIngredients);
 
                 $processed++;
             });
@@ -99,22 +107,72 @@ class RecipeIngestionService
             ->values()
             ->all();
 
+        $dishType = $this->resolveDishType($payload);
+        $mealType = $this->normalizeList($payload['meal_times'] ?? null);
+        $cuisine = $this->normalizeList([
+            ...($payload['cuisines_name'] ?? []),
+            ...($payload['sub_cuisines_name'] ?? []),
+        ]);
+        $dietary = $this->normalizeNullableString($payload['dietary_restriction'] ?? null);
+        $searchDocument = $this->buildSearchDocument(
+            title: (string) ($payload['title'] ?? ''),
+            ingredients: $ingredients,
+            dishType: $dishType,
+            mealType: $mealType,
+            cuisine: $cuisine,
+            dietary: $dietary,
+        );
+
         return [
             'id' => (int) ($payload['id'] ?? 0),
             'title' => (string) ($payload['title'] ?? ''),
             'normalized_title' => Str::of((string) ($payload['title'] ?? ''))->lower()->squish()->value(),
             'ingredients' => $ingredients,
             'ingredient_ids' => $ingredientIds,
-            'dish_type' => $this->resolveDishType($payload),
-            'meal_type' => $this->normalizeList($payload['meal_times'] ?? null),
-            'cuisine' => $this->normalizeList([
-                ...($payload['cuisines_name'] ?? []),
-                ...($payload['sub_cuisines_name'] ?? []),
-            ]),
+            'dish_type' => $dishType,
+            'meal_type' => $mealType,
+            'cuisine' => $cuisine,
             'cooking_time' => $this->normalizeNullableInt($payload['cooking_time'] ?? null),
-            'dietary' => $this->normalizeNullableString($payload['dietary_restriction'] ?? null),
+            'dietary' => $dietary,
+            'calories' => $this->extractNutritionValue($payload, 'calories'),
+            'fat' => $this->extractNutritionValue($payload, 'fat'),
+            'protein' => $this->extractNutritionValue($payload, 'protein'),
+            'sodium' => $this->extractNutritionValue($payload, 'sodium'),
+            'nutrition' => $this->extractNutritionPayload($payload),
+            'taste_profile' => $this->extractTasteProfile($payload),
+            'search_document' => $searchDocument,
+            'embedding' => $this->embeddingService->embedText($searchDocument),
+            'semantic_embedding' => $this->embeddingService->embedText($searchDocument),
+            'recipe_ingredients' => $this->mapRecipeIngredients($payload['recipe_ingredients'] ?? []),
             'raw_json' => $payload,
         ];
+    }
+
+    /**
+     * @param  array<int, string>  $ingredients
+     * @param  array<int, string>|null  $mealType
+     * @param  array<int, string>|null  $cuisine
+     */
+    private function buildSearchDocument(
+        string $title,
+        array $ingredients,
+        ?string $dishType,
+        ?array $mealType,
+        ?array $cuisine,
+        ?string $dietary,
+    ): string {
+        return Str::of(implode(' ', array_filter([
+            $title,
+            $dishType,
+            $dietary,
+            $mealType !== null ? implode(' ', $mealType) : null,
+            $cuisine !== null ? implode(' ', $cuisine) : null,
+            implode(' ', $ingredients),
+        ])))
+            ->lower()
+            ->replaceMatches('/[^a-z0-9\s]/', ' ')
+            ->squish()
+            ->value();
     }
 
     /**
@@ -186,6 +244,135 @@ class RecipeIngestionService
         }
 
         return (int) $value;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function extractNutritionValue(array $payload, string $key): ?float
+    {
+        $value = data_get($payload, $key, data_get($payload, 'nutrition.'.$key));
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (float) $value;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, float>
+     */
+    private function extractNutritionPayload(array $payload): array
+    {
+        $nutrition = data_get($payload, 'nutrition', []);
+
+        if (! is_array($nutrition)) {
+            $nutrition = [];
+        }
+
+        foreach (['calories', 'fat', 'protein', 'sodium'] as $key) {
+            $value = $this->extractNutritionValue($payload, $key);
+
+            if ($value !== null) {
+                $nutrition[$key] = $value;
+            }
+        }
+
+        return $nutrition;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, float>
+     */
+    private function extractTasteProfile(array $payload): array
+    {
+        $profile = data_get($payload, 'taste_profile', []);
+
+        if (is_array($profile) && $profile !== []) {
+            return array_map('floatval', array_filter($profile, fn ($value) => is_numeric($value)));
+        }
+
+        $title = Str::lower((string) ($payload['title'] ?? ''));
+
+        return array_filter([
+            'spicy' => Str::contains($title, ['spicy', 'masala']) ? 0.7 : null,
+            'tangy' => Str::contains($title, ['tangy', 'chutney']) ? 0.55 : null,
+            'sweet' => Str::contains($title, ['sweet', 'dessert']) ? 0.65 : null,
+            'rich' => Str::contains($title, ['butter', 'creamy']) ? 0.6 : null,
+        ], fn ($value) => $value !== null);
+    }
+
+    /**
+     * @param  iterable<mixed>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function mapRecipeIngredients(iterable $rows): array
+    {
+        return Collection::make($rows)
+            ->map(function ($row): ?array {
+                if (! is_array($row) || ! isset($row['ingredient_id'])) {
+                    return null;
+                }
+
+                $quantityValue = $this->normalizeQuantityValue($row);
+
+                return [
+                    'ingredient_id' => (int) $row['ingredient_id'],
+                    'quantity_value' => $quantityValue,
+                    'quantity_text' => isset($row['quantity']) && is_string($row['quantity']) ? trim($row['quantity']) : null,
+                    'unit' => isset($row['unit']) && is_string($row['unit']) ? trim($row['unit']) : null,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function normalizeQuantityValue(array $row): ?float
+    {
+        $value = $row['quantity_value'] ?? $row['normalized_quantity'] ?? null;
+
+        if (is_numeric($value)) {
+            return max(0.0, min(1.0, (float) $value));
+        }
+
+        $quantityText = Str::lower((string) ($row['quantity'] ?? ''));
+
+        return match (true) {
+            $quantityText === '' => null,
+            Str::contains($quantityText, ['little', 'small']) => 0.2,
+            Str::contains($quantityText, ['extra', 'more']) => 0.8,
+            default => 0.5,
+        };
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     */
+    private function syncRecipeIngredients(int $recipeId, array $rows): void
+    {
+        DB::table('recipe_ingredients')->where('recipe_id', $recipeId)->delete();
+
+        if ($rows === []) {
+            return;
+        }
+
+        DB::table('recipe_ingredients')->insert(array_map(
+            static fn (array $row): array => [
+                'recipe_id' => $recipeId,
+                'ingredient_id' => $row['ingredient_id'],
+                'quantity_value' => $row['quantity_value'],
+                'quantity_text' => $row['quantity_text'],
+                'unit' => $row['unit'],
+            ],
+            $rows
+        ));
     }
 
     private function syncPrimaryKeySequence(): void

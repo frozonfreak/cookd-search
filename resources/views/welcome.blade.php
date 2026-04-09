@@ -17,8 +17,25 @@
             <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f77737]/50 to-transparent"></div>
 
             <main class="relative mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-10 sm:px-10 lg:px-16">
-                <section class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-                    <div class="max-w-3xl">
+                <div class="mb-6 flex justify-end">
+                    <div class="inline-flex rounded-full border border-[#f1c39a] bg-white/70 p-1 shadow-lg shadow-[#f77737]/10">
+                        <a
+                            href="{{ route('home', array_filter(['q' => $query !== '' ? $query : null, 'view' => 'detailed'])) }}"
+                            class="rounded-full px-4 py-2 text-sm font-medium transition {{ $viewMode === 'detailed' ? 'bg-[#f77737] text-white' : 'text-[#9a6a4c] hover:bg-[#fff1e4]' }}"
+                        >
+                            Detailed UI
+                        </a>
+                        <a
+                            href="{{ route('home', array_filter(['q' => $query !== '' ? $query : null, 'view' => 'minimal'])) }}"
+                            class="rounded-full px-4 py-2 text-sm font-medium transition {{ $viewMode === 'minimal' ? 'bg-[#f77737] text-white' : 'text-[#9a6a4c] hover:bg-[#fff1e4]' }}"
+                        >
+                            Minimal UI
+                        </a>
+                    </div>
+                </div>
+
+                <section class="grid gap-10 {{ $viewMode === 'detailed' ? 'lg:grid-cols-[1.1fr_0.9fr] lg:items-start' : '' }}">
+                    <div class="{{ $viewMode === 'minimal' ? 'mx-auto w-full max-w-4xl' : 'max-w-3xl' }}">
                         <p class="mb-4 inline-flex rounded-full border border-[#f77737]/20 bg-white/60 px-3 py-1 text-xs font-medium uppercase tracking-[0.28em] text-[#b84a1b]">
                             Natural Language Recipe Search
                         </p>
@@ -30,6 +47,7 @@
                         </p>
 
                         <form method="GET" action="{{ route('home') }}" class="mt-8">
+                            <input type="hidden" name="view" value="{{ $viewMode }}">
                             <label for="q" class="sr-only">Search recipes</label>
                             <div class="rounded-[2rem] border border-[#f4b27f] bg-white/75 p-2 shadow-2xl shadow-[#f77737]/15 backdrop-blur">
                                 <div class="flex flex-col gap-3 rounded-[1.6rem] border border-[#ffe7d1] bg-[#fffaf5]/90 p-3 sm:flex-row sm:items-center">
@@ -53,13 +71,13 @@
 
                         <div class="mt-5 flex flex-wrap gap-3 text-sm text-[#7b4a34]">
                             @foreach ([
-                                'chutney without coconut',
-                                'chutney with onion and tomato',
-                                'only potato and onion recipes',
-                                'I have onion, tomato, egg suggest breakfast',
+                                'spicy tangy curry with extra onion but no garlic',
+                                'high protein vegetarian breakfast under 20 min',
+                                'comfort food dinner with tomato or paneer',
+                                'light refreshing lunch low sodium with little oil',
                             ] as $example)
                                 <a
-                                    href="{{ route('home', ['q' => $example]) }}"
+                                    href="{{ route('home', ['q' => $example, 'view' => $viewMode]) }}"
                                     class="rounded-full border border-[#f3c49d] bg-white/70 px-4 py-2 transition hover:border-[#f77737]/50 hover:bg-[#fff1e4] hover:text-[#9b3d16]"
                                 >
                                     {{ $example }}
@@ -68,6 +86,7 @@
                         </div>
                     </div>
 
+                    @if ($viewMode === 'detailed')
                     <aside class="rounded-[2rem] border border-[#f1c39a] bg-white/75 p-6 shadow-2xl shadow-[#f77737]/12 backdrop-blur">
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#a15a33]">Search Signals</p>
                         @if ($parsed)
@@ -78,6 +97,10 @@
                                         <div class="flex items-start justify-between gap-4">
                                             <dt class="text-[#9a6a4c]">Original query</dt>
                                             <dd class="max-w-[70%] text-right text-[#4a2b1d]">{{ $query }}</dd>
+                                        </div>
+                                        <div class="flex items-start justify-between gap-4">
+                                            <dt class="text-[#9a6a4c]">Rewritten query</dt>
+                                            <dd class="max-w-[70%] text-right text-[#4a2b1d]">{{ $context?->rewrittenQuery ?? $context?->cleanedQuery ?? 'none' }}</dd>
                                         </div>
                                         <div class="flex items-start justify-between gap-4">
                                             <dt class="text-[#9a6a4c]">Dish intent</dt>
@@ -106,8 +129,24 @@
                                                 @endif
                                             </dd>
                                         </div>
+                                        <div class="flex items-start justify-between gap-4">
+                                            <dt class="text-[#9a6a4c]">Personalization</dt>
+                                            <dd class="text-right text-[#4a2b1d]">{{ ($tasteProfile['weight'] ?? 0) > 0 ? 'active' : 'inactive' }}</dd>
+                                        </div>
                                     </dl>
                                 </div>
+                                @if (($context?->rewrite['corrections'] ?? []) !== [])
+                                    <div class="rounded-[1.25rem] border border-[#f4d1b2] bg-[#fff7f0] p-4">
+                                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#a15a33]">Query Rewrites</p>
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            @foreach ($context->rewrite['corrections'] as $rewrite)
+                                                <span class="rounded-full bg-[#fcaf45]/18 px-3 py-1 text-sm text-[#9b4d09]">
+                                                    {{ $rewrite['from'] }} → {{ $rewrite['to'] }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                                 @if ($dsl)
                                     <details class="rounded-[1.25rem] border border-[#f4d1b2] bg-[#fff7f0] p-4">
                                         <summary class="cursor-pointer list-none text-xs font-semibold uppercase tracking-[0.24em] text-[#a15a33]">
@@ -151,6 +190,54 @@
                                     </div>
                                 </div>
                                 <div>
+                                    <p class="text-sm text-[#9a6a4c]">Quantity Constraints</p>
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        @forelse ($parsed['quantity_constraints'] as $constraint)
+                                            <span class="rounded-full bg-[#f3ead7] px-3 py-1 text-sm text-[#7b4a34]">
+                                                {{ $constraint['ingredient'] }}
+                                                @if (($constraint['quantity']['target'] ?? null) !== null)
+                                                    target {{ number_format((float) $constraint['quantity']['target'], 1) }}
+                                                @elseif (($constraint['quantity']['max'] ?? null) !== null)
+                                                    max {{ number_format((float) $constraint['quantity']['max'], 1) }}
+                                                @elseif (($constraint['quantity']['min'] ?? null) !== null)
+                                                    min {{ number_format((float) $constraint['quantity']['min'], 1) }}
+                                                @endif
+                                            </span>
+                                        @empty
+                                            <span class="text-[#b48263]">None</span>
+                                        @endforelse
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-[#9a6a4c]">Nutrition Constraints</p>
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        @forelse ($parsed['nutrition'] as $metric => $constraint)
+                                            <span class="rounded-full bg-[#eaf5ea] px-3 py-1 text-sm text-[#3b6b43]">
+                                                {{ $metric }}
+                                                @if (isset($constraint['max']))
+                                                    <= {{ $constraint['max'] }}
+                                                @elseif (isset($constraint['min']))
+                                                    >= {{ $constraint['min'] }}
+                                                @endif
+                                            </span>
+                                        @empty
+                                            <span class="text-[#b48263]">None</span>
+                                        @endforelse
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-[#9a6a4c]">Taste Intent</p>
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        @forelse ($parsed['taste_preferences'] as $taste => $weight)
+                                            <span class="rounded-full bg-[#ffe7d1] px-3 py-1 text-sm text-[#9b3d16]">
+                                                {{ $taste }} {{ number_format((float) $weight, 1) }}
+                                            </span>
+                                        @empty
+                                            <span class="text-[#b48263]">None</span>
+                                        @endforelse
+                                    </div>
+                                </div>
+                                <div>
                                     <p class="text-sm text-[#9a6a4c]">Inventory Ranking Terms</p>
                                     <div class="mt-2 flex flex-wrap gap-2">
                                         @forelse ($parsed['inventory'] as $item)
@@ -171,9 +258,10 @@
                             </div>
                         @endif
                     </aside>
+                    @endif
                 </section>
 
-                <section class="mt-12">
+                <section class="mt-12 {{ $viewMode === 'minimal' ? 'mx-auto w-full max-w-4xl' : '' }}">
                     <div class="mb-6 flex items-end justify-between gap-4">
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#a15a33]">Results</p>
@@ -211,18 +299,9 @@
                                                 {{ $recipe->title }}
                                             </h3>
                                         </div>
-                                        <div class="space-y-2 text-right">
-                                            @if (isset($recipe->total_score))
-                                                <div class="rounded-full bg-[#f77737]/12 px-3 py-1 text-sm font-medium text-[#9b3d16]">
-                                                    Score {{ number_format((float) $recipe->total_score, 2) }}
-                                                </div>
-                                            @endif
-                                            <div class="text-xs text-[#9a6a4c]">
-                                                I {{ number_format((float) ($recipe->ingredient_score ?? 0), 2) }}
-                                                · T {{ number_format((float) ($recipe->time_score ?? 0), 2) }}
-                                                · P {{ number_format((float) ($recipe->popularity_score ?? 0), 2) }}
-                                                · R {{ number_format((float) ($recipe->recency_score ?? 0), 2) }}
-                                            </div>
+                                        <div class="text-right">
+                                            <p class="text-xs uppercase tracking-[0.2em] text-[#a15a33]">Hybrid score</p>
+                                            <p class="mt-2 text-xl font-semibold text-[#9b3d16]">{{ $recipe->display_score }}</p>
                                         </div>
                                     </div>
 
@@ -238,13 +317,38 @@
                                             </span>
                                         @endif
                                     </div>
+
+                                    @if ($viewMode === 'detailed')
+                                        <div class="mt-4 grid grid-cols-3 gap-2 text-xs text-[#9a6a4c]">
+                                            <div class="rounded-2xl bg-[#fff5ea] px-3 py-2">
+                                                Lexical<br>{{ number_format((float) ($recipe->total_score ?? 0), 2) }}
+                                            </div>
+                                            <div class="rounded-2xl bg-[#fff5ea] px-3 py-2">
+                                                Semantic<br>{{ number_format((float) ($recipe->semantic_score ?? 0), 2) }}
+                                            </div>
+                                            <div class="rounded-2xl bg-[#fff5ea] px-3 py-2">
+                                                Taste<br>{{ number_format((float) ($recipe->personalization_score ?? 0), 2) }}
+                                            </div>
+                                        </div>
+
+                                        @if (is_array($recipe->score_breakdown ?? null))
+                                            <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-[#9a6a4c]">
+                                                <div class="rounded-2xl bg-[#fff5ea] px-3 py-2">
+                                                    Qty<br>{{ number_format((float) ($recipe->score_breakdown['quantity'] ?? 0), 2) }}
+                                                </div>
+                                                <div class="rounded-2xl bg-[#fff5ea] px-3 py-2">
+                                                    Nutrition<br>{{ number_format((float) ($recipe->score_breakdown['nutrition'] ?? 0), 2) }}
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endif
                                 </a>
                             @endforeach
                         </div>
                     @endif
                 </section>
 
-                @if ($context && $context->debug !== [])
+                @if ($viewMode === 'detailed' && $context && $context->debug !== [])
                     <section class="mt-12">
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#a15a33]">Pipeline Debug</p>
                         <div class="mt-4 grid gap-4 lg:grid-cols-2">

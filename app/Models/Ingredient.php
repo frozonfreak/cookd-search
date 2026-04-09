@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name'])]
+#[Fillable(['name', 'group_id'])]
 class Ingredient extends Model
 {
     use HasFactory;
@@ -15,5 +15,10 @@ class Ingredient extends Model
     public function aliases(): HasMany
     {
         return $this->hasMany(IngredientAlias::class);
+    }
+
+    public function relations(): HasMany
+    {
+        return $this->hasMany(IngredientRelation::class);
     }
 }

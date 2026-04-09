@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\DTO\QueryContext;
 use App\Services\Pipes\DSLBuilderPipe;
+use App\Services\Pipes\EmbeddingQueryPipe;
 use App\Services\Pipes\EntityExtractionPipe;
-use App\Services\Pipes\IngredientNormalizationPipe;
+use App\Services\Pipes\IngredientResolutionPipe;
 use App\Services\Pipes\IntentDetectionPipe;
 use App\Services\Pipes\OperatorClassificationPipe;
 use App\Services\Pipes\PhraseChunkingPipe;
 use App\Services\Pipes\PreprocessPipe;
+use App\Services\Pipes\QueryRewritePipe;
 use App\Services\Pipes\ScoringProfilePipe;
 use App\Services\Pipes\TokenizePipe;
 use Illuminate\Pipeline\Pipeline;
@@ -30,14 +32,16 @@ class QueryPipeline
             ->send($context)
             ->through([
                 PreprocessPipe::class,
+                QueryRewritePipe::class,
                 TokenizePipe::class,
                 OperatorClassificationPipe::class,
                 PhraseChunkingPipe::class,
                 EntityExtractionPipe::class,
-                IngredientNormalizationPipe::class,
+                IngredientResolutionPipe::class,
                 IntentDetectionPipe::class,
                 ScoringProfilePipe::class,
                 DSLBuilderPipe::class,
+                EmbeddingQueryPipe::class,
             ])
             ->thenReturn();
 
