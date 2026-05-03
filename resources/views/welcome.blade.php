@@ -105,7 +105,6 @@
                                 '_cook_time'   => $recipe->cooking_time,
                                 '_ingredients' => $recipe->ingredients ?? [],
                             ]);
-                            $thumbUrl    = $recipe->raw_json['rectangle_thumbail_url'] ?? $recipe->raw_json['square_thumbnail_url'] ?? null;
                             $cuisineTags = array_slice((array) ($recipe->raw_json['cuisines_name'] ?? []), 0, 1);
                             $explanations = [];
                             if ($recipe->cooking_time && $recipe->cooking_time <= 20) $explanations[] = 'Quick (' . $recipe->cooking_time . ' min)';
@@ -120,42 +119,16 @@
 
                         <div class="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-[#f1c39a] bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#f77737]/40 hover:shadow-md hover:shadow-[#f77737]/10">
 
-                            {{-- Thumbnail (if available) --}}
-                            @if ($thumbUrl)
-                            <div class="relative overflow-hidden" style="aspect-ratio:16/9">
-                                <img src="{{ $thumbUrl }}"
-                                     class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                                     alt="{{ $recipe->title }}" loading="lazy">
-                                <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                                {{-- Save button over image --}}
-                                <button type="button"
-                                    onclick="toggleSave({{ $recipe->id }}, this)"
-                                    data-id="{{ $recipe->id }}"
-                                    class="save-btn absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-base backdrop-blur-sm transition hover:bg-black/45"
-                                    aria-label="Save recipe">
-                                    <span class="save-heart">🤍</span>
-                                </button>
-                                {{-- Cook time badge --}}
-                                @if ($recipe->cooking_time)
-                                <div class="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                                    ⏱ {{ $recipe->cooking_time }} min
-                                </div>
-                                @endif
-                            </div>
-                            @endif
+                            {{-- Save button --}}
+                            <button type="button"
+                                onclick="toggleSave({{ $recipe->id }}, this)"
+                                data-id="{{ $recipe->id }}"
+                                class="save-btn absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[#f1c39a] bg-white text-base transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]"
+                                aria-label="Save recipe">
+                                <span class="save-heart">🤍</span>
+                            </button>
 
                             <div class="flex flex-1 flex-col p-4">
-
-                                {{-- Save button (no-thumbnail fallback) --}}
-                                @if (!$thumbUrl)
-                                <button type="button"
-                                    onclick="toggleSave({{ $recipe->id }}, this)"
-                                    data-id="{{ $recipe->id }}"
-                                    class="save-btn absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-[#f1c39a] bg-white text-base transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]"
-                                    aria-label="Save recipe">
-                                    <span class="save-heart">🤍</span>
-                                </button>
-                                @endif
 
                                 {{-- Click area → open detail --}}
                                 <button type="button"
@@ -163,8 +136,8 @@
                                     class="flex-1 w-full text-left">
 
                                     {{-- Title row --}}
-                                    <div class="{{ $thumbUrl ? '' : 'pr-10' }}">
-                                        @if (!$thumbUrl && $recipe->cooking_time)
+                                    <div class="pr-10">
+                                        @if ($recipe->cooking_time)
                                         <p class="mb-1 text-xs font-medium text-[#9b3d16]">⏱ {{ $recipe->cooking_time }} min</p>
                                         @endif
                                         <h3 class="font-['Space_Grotesk'] text-base font-semibold leading-snug text-[#4a2b1d] sm:text-[17px]">
