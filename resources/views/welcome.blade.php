@@ -117,33 +117,27 @@
                             elseif ($recipe->fat !== null && $recipe->fat <= 8) $explanations[] = 'Low oil';
                         @endphp
 
-                        <div class="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-[#f1c39a] bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#f77737]/40 hover:shadow-md hover:shadow-[#f77737]/10">
-
-                            {{-- Save button --}}
-                            <button type="button"
-                                onclick="toggleSave({{ $recipe->id }}, this)"
-                                data-id="{{ $recipe->id }}"
-                                class="save-btn absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[#f1c39a] bg-white text-base transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]"
-                                aria-label="Save recipe">
-                                <span class="save-heart">🤍</span>
-                            </button>
+                        <div class="group flex flex-col overflow-hidden rounded-[1.75rem] border border-[#f1c39a] bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#f77737]/40 hover:shadow-md hover:shadow-[#f77737]/10">
 
                             <div class="flex flex-1 flex-col p-4">
 
-                                {{-- Click area → open detail --}}
-                                <button type="button"
-                                    onclick="openRecipeModal({{ json_encode($cardData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }})"
-                                    class="flex-1 w-full text-left">
+                                {{-- Title row: content + save side by side --}}
+                                <div class="flex items-start gap-2">
 
-                                    {{-- Title row --}}
-                                    <div class="pr-10">
-                                        @if ($recipe->cooking_time)
-                                        <p class="mb-1 text-xs font-medium text-[#9b3d16]">⏱ {{ $recipe->cooking_time }} min</p>
-                                        @endif
-                                        <h3 class="font-['Space_Grotesk'] text-base font-semibold leading-snug text-[#4a2b1d] sm:text-[17px]">
-                                            {{ $recipe->title }}
-                                        </h3>
-                                    </div>
+                                    {{-- Click area → open detail --}}
+                                    <button type="button"
+                                        onclick="openRecipeModal({{ json_encode($cardData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }})"
+                                        class="flex-1 min-w-0 text-left">
+
+                                        {{-- Cook time + title --}}
+                                        <div>
+                                            @if ($recipe->cooking_time)
+                                            <p class="mb-1 text-xs font-medium text-[#9b3d16]">⏱ {{ $recipe->cooking_time }} min</p>
+                                            @endif
+                                            <h3 class="font-['Space_Grotesk'] text-base font-semibold leading-snug text-[#4a2b1d] sm:text-[17px]">
+                                                {{ $recipe->title }}
+                                            </h3>
+                                        </div>
 
                                     {{-- Cuisine + dietary tags --}}
                                     @if (!empty($cuisineTags) || $recipe->dietary)
@@ -175,7 +169,18 @@
                                     @if (!empty($explanations))
                                     <p class="mt-2.5 text-xs text-[#9b5a30]">✓ {{ implode(' · ', array_slice($explanations, 0, 2)) }}</p>
                                     @endif
-                                </button>
+                                    </button>{{-- end openRecipeModal button --}}
+
+                                    {{-- Save button --}}
+                                    <button type="button"
+                                        onclick="toggleSave({{ $recipe->id }}, this)"
+                                        data-id="{{ $recipe->id }}"
+                                        class="save-btn mt-0.5 shrink-0 flex h-8 w-8 items-center justify-center rounded-full border border-[#f1c39a] bg-white/80 text-base transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]"
+                                        aria-label="Save recipe">
+                                        <span class="save-heart">🤍</span>
+                                    </button>
+
+                                </div>{{-- end title flex row --}}
 
                                 {{-- Add to Plan --}}
                                 <button type="button"
