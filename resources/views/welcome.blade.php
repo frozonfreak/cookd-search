@@ -276,11 +276,16 @@
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#a15a33]">Grocery List</p>
                         <h2 class="mt-2 font-['Space_Grotesk'] text-3xl font-bold text-[#5a2414]">What to buy</h2>
                     </div>
-                    <button onclick="showScreen('meal-plan')"
-                        class="mt-1 shrink-0 rounded-full border border-[#f1c39a] bg-white/70 px-4 py-2 text-sm text-[#7b4a34] transition hover:border-[#f77737]/50">
-                        ← Edit Plan
-                    </button>
-                </div>
+                    <div class="mt-1 flex shrink-0 gap-2">
+                        <button onclick="showScreen('meal-plan')"
+                            class="rounded-full border border-[#f1c39a] bg-white/70 px-4 py-2 text-sm text-[#7b4a34] transition hover:border-[#f77737]/50">
+                            ← Edit Plan
+                        </button>
+                        <button onclick="clearGroceryList()"
+                            class="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-500 transition hover:bg-red-100">
+                            Clear List
+                        </button>
+                    </div>
 
                 {{-- Empty state --}}
                 <div id="grocery-empty" class="hidden rounded-[1.75rem] border border-dashed border-[#f1c39a] bg-white/50 py-16 text-center">
@@ -537,6 +542,13 @@ function clearPlan() {
     persist();
     updatePlanBadge();
     renderMealPlan();
+}
+
+function clearGroceryList() {
+    state.groceryList = null;
+    state.pantryItems = new Set();
+    persist();
+    renderGroceryList();
 }
 
 function updatePlanBadge() {
