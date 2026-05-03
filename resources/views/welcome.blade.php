@@ -282,94 +282,96 @@
 {{-- ─── Recipe Detail Modal ────────────────────────────────────── --}}
 <div id="recipe-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true">
     <div id="modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
-    <div class="relative z-10 flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-[#fff7ed] shadow-2xl">
+    <div class="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-[#fffaf5] shadow-2xl">
 
-        {{-- Close --}}
-        <button type="button" onclick="closeRecipeModal()"
-            class="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/20 text-white transition hover:bg-black/40"
-            aria-label="Close">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-        </button>
-
-        {{-- Media --}}
-        <div id="modal-media" class="relative w-full bg-black" style="aspect-ratio:16/9">
+        {{-- Hero: media + title overlay --}}
+        <div id="modal-media" class="relative flex-none bg-[#1a0a00]" style="aspect-ratio:16/9;min-height:180px">
             <video id="modal-video" class="h-full w-full object-cover" controls playsinline poster=""></video>
             <img id="modal-thumbnail" class="absolute inset-0 h-full w-full object-cover" src="" alt="">
+            {{-- Gradient overlay --}}
+            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
+            {{-- Close --}}
+            <button type="button" onclick="closeRecipeModal()"
+                class="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50"
+                aria-label="Close">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            {{-- Overlaid title + badges --}}
+            <div class="pointer-events-none absolute bottom-0 left-0 right-0 p-5">
+                <div id="modal-badges" class="mb-2 flex flex-wrap gap-1.5"></div>
+                <h2 id="modal-title" class="font-['Space_Grotesk'] text-xl font-bold leading-snug text-white drop-shadow sm:text-2xl"></h2>
+            </div>
+        </div>
+
+        {{-- Action strip --}}
+        <div class="flex flex-none items-center gap-2 border-b border-[#f1c39a]/50 bg-white/80 px-5 py-3 backdrop-blur">
+            <button id="modal-save-btn" onclick="modalFeedback('save')"
+                class="flex items-center gap-1.5 rounded-full border border-[#f1c39a] bg-[#fff7ed] px-3 py-1.5 text-sm font-medium text-[#7b4a34] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
+                <span id="modal-save-heart">🤍</span><span class="hidden sm:inline">Save</span>
+            </button>
+            <button onclick="modalFeedback('like')"
+                class="flex items-center gap-1.5 rounded-full border border-[#f1c39a] bg-[#fff7ed] px-3 py-1.5 text-sm font-medium text-[#7b4a34] transition hover:border-green-200 hover:bg-green-50 hover:text-green-700">
+                👍<span class="ml-1 hidden text-xs sm:inline">Like</span>
+            </button>
+            <button onclick="modalFeedback('dislike')"
+                class="flex items-center gap-1.5 rounded-full border border-[#f1c39a] bg-[#fff7ed] px-3 py-1.5 text-sm text-[#7b4a34] transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600">
+                👎
+            </button>
+            <div class="flex-1"></div>
+            <button id="modal-plan-btn" onclick="addToPlanFromModal()"
+                class="rounded-full bg-[#f77737] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#f56040] disabled:opacity-50">
+                + Add to Plan
+            </button>
         </div>
 
         {{-- Scrollable body --}}
-        <div class="flex-1 overflow-y-auto p-6 sm:p-8">
+        <div class="flex-1 overflow-y-auto">
 
-            {{-- Title + badges --}}
-            <div class="flex flex-wrap items-start justify-between gap-3">
-                <h2 id="modal-title" class="font-['Space_Grotesk'] text-2xl font-bold text-[#4a2b1d] sm:text-3xl"></h2>
-                <div id="modal-badges" class="flex flex-wrap gap-2"></div>
-            </div>
+            {{-- Stats row (horizontal scroll) --}}
+            <div id="modal-stats" class="no-scrollbar flex gap-3 overflow-x-auto border-b border-[#f1c39a]/40 px-5 py-4"></div>
 
             {{-- Taste badges --}}
-            <div id="modal-taste-wrap" class="mt-3 hidden">
+            <div id="modal-taste-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+                <p class="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Flavour</p>
                 <div id="modal-taste" class="flex flex-wrap gap-2"></div>
             </div>
 
-            {{-- Quick stats --}}
-            <div id="modal-stats" class="mt-5 flex flex-wrap gap-3"></div>
-
-            {{-- Feedback buttons --}}
-            <div class="mt-5 flex gap-3">
-                <button id="modal-save-btn" onclick="modalFeedback('save')"
-                    class="flex items-center gap-2 rounded-full border border-[#f1c39a] bg-white/70 px-4 py-2 text-sm font-medium text-[#7b4a34] transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]">
-                    <span id="modal-save-heart">🤍</span> Save
-                </button>
-                <button onclick="modalFeedback('like')"
-                    class="flex items-center gap-2 rounded-full border border-[#f1c39a] bg-white/70 px-4 py-2 text-sm font-medium text-[#7b4a34] transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]">
-                    👍 Like
-                </button>
-                <button onclick="modalFeedback('dislike')"
-                    class="flex items-center gap-2 rounded-full border border-[#f1c39a] bg-white/70 px-4 py-2 text-sm font-medium text-[#7b4a34] transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]">
-                    👎 Not Interested
-                </button>
+            {{-- Why this recipe --}}
+            <div id="modal-why-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+                <p class="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Why this recipe?</p>
+                <ul id="modal-why" class="space-y-1 text-sm text-[#4a2b1d]"></ul>
             </div>
-
-            {{-- Add to Plan from modal --}}
-            <button id="modal-plan-btn" onclick="addToPlanFromModal()"
-                class="mt-4 w-full rounded-[1.2rem] bg-[#f77737] px-6 py-3 font-medium text-white transition hover:bg-[#f56040]">
-                + Add to Plan
-            </button>
 
             {{-- Nutrition --}}
-            <div id="modal-nutrition-wrap" class="mt-6 hidden">
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#a15a33]">Nutrition per serving</p>
-                <div id="modal-nutrition" class="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6"></div>
+            <div id="modal-nutrition-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+                <p class="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Nutrition per serving</p>
+                <div id="modal-nutrition" class="grid grid-cols-3 gap-2 sm:grid-cols-6"></div>
             </div>
 
-            {{-- Ingredients with Substitute buttons --}}
-            <div id="modal-ingredients-wrap" class="mt-6 hidden">
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#a15a33]">Ingredients</p>
-                <ul id="modal-ingredients" class="mt-3 space-y-2"></ul>
-            </div>
-
-            {{-- Why this recipe --}}
-            <div id="modal-why-wrap" class="mt-6 hidden rounded-[1.2rem] border border-[#f1c39a] bg-white/60 p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#a15a33]">Why this recipe?</p>
-                <ul id="modal-why" class="mt-2 space-y-1 text-sm text-[#4a2b1d]"></ul>
+            {{-- Ingredients --}}
+            <div id="modal-ingredients-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+                <p class="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Ingredients</p>
+                <ul id="modal-ingredients" class="space-y-2"></ul>
             </div>
 
             {{-- Instructions --}}
-            <div id="modal-instructions-wrap" class="mt-6 hidden">
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#a15a33]">Instructions</p>
-                <ol id="modal-instructions" class="mt-3 space-y-3"></ol>
+            <div id="modal-instructions-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+                <p class="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Instructions</p>
+                <ol id="modal-instructions" class="space-y-4"></ol>
             </div>
 
-            {{-- External link --}}
-            <a id="modal-link" href="#" target="_blank" rel="noreferrer"
-                class="mt-8 inline-flex items-center gap-2 rounded-full bg-[#f77737] px-6 py-3 text-sm font-medium text-white transition hover:bg-[#f56040]">
-                View full recipe on Cookd
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
-                </svg>
-            </a>
+            {{-- Footer link --}}
+            <div class="px-5 py-5">
+                <a id="modal-link" href="#" target="_blank" rel="noreferrer"
+                    class="flex w-full items-center justify-center gap-2 rounded-[1rem] border border-[#f1c39a] bg-[#fff7ed] py-3 text-sm font-medium text-[#7b4a34] transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]">
+                    View full recipe on Cookd
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
+                    </svg>
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -831,8 +833,8 @@ function openRecipeModal(r) {
     ].forEach(s => {
         if (!s.value) return;
         var div = document.createElement('div');
-        div.className = 'rounded-2xl border border-[#f1c39a] bg-white/70 px-4 py-3 text-center';
-        div.innerHTML = '<p class="text-xs text-[#9a6a4c]">' + s.label + '</p><p class="mt-1 text-sm font-semibold text-[#4a2b1d]">' + s.value + '</p>';
+        div.className = 'flex-none rounded-2xl border border-[#f1c39a] bg-white/80 px-4 py-3 text-center min-w-[72px]';
+        div.innerHTML = '<p class="text-[10px] text-[#9a6a4c]">' + s.label + '</p><p class="mt-1 text-sm font-semibold text-[#4a2b1d]">' + s.value + '</p>';
         stats.appendChild(div);
     });
 
@@ -888,7 +890,7 @@ function openRecipeModal(r) {
     if (ingRows.length) {
         ingRows.forEach(ing => {
             var li = document.createElement('li');
-            li.className = 'flex items-center gap-3 rounded-xl bg-white/60 px-3 py-2 text-sm';
+            li.className = 'flex items-center gap-3 rounded-xl border border-[#f1c39a]/50 bg-white/70 px-3 py-2.5 text-sm';
             var qty = [ing.quantity, ing.unit].filter(Boolean).join(' ');
             li.innerHTML =
                 (ing.image_url
@@ -917,7 +919,7 @@ function openRecipeModal(r) {
         steps.forEach((step, i) => {
             var li = document.createElement('li');
             li.className = 'flex gap-4 text-sm leading-relaxed text-[#4a2b1d]';
-            li.innerHTML = '<span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f77737] text-xs font-bold text-white">' + (i + 1) + '</span><span>' + escHtml(step.trim()) + '</span>';
+            li.innerHTML = '<span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f77737] text-xs font-bold text-white">' + (i + 1) + '</span><span class="flex-1">' + escHtml(step.trim()) + '</span>';
             instructionsList.appendChild(li);
         });
         instructionsWrap.classList.remove('hidden');
@@ -1052,7 +1054,8 @@ document.addEventListener('keydown', e => {
 <style>
     .nav-tab { color: #7b4a34; }
     .nav-tab:hover { background: #fff1e4; color: #9b3d16; }
-    /* Active tab set by showScreen() inline */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 
 </body>
