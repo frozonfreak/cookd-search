@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=space-grotesk:400,500,700|instrument-sans:400,500,600" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 </head>
 <body class="min-h-screen bg-[#fff7ed] text-[#3f2415]">
 
@@ -325,9 +324,8 @@
     <div id="modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
     <div class="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-[#fff7ed] shadow-2xl">
 
-        {{-- Hero: media + title overlay --}}
-        <div id="modal-media" class="relative flex-none bg-[#1a0a00]" style="aspect-ratio:16/9;min-height:180px">
-            <video id="modal-video" class="h-full w-full object-cover" controls playsinline poster=""></video>
+        {{-- Hero: thumbnail + title overlay --}}
+        <div id="modal-media" class="relative flex-none bg-gradient-to-br from-[#f99142] to-[#e8521a]" style="aspect-ratio:16/9;min-height:180px">
             <img id="modal-thumbnail" class="absolute inset-0 h-full w-full object-cover" src="" alt="">
             {{-- Gradient overlay --}}
             <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
@@ -368,51 +366,51 @@
         </div>
 
         {{-- Scrollable body --}}
-        <div class="flex-1 overflow-y-auto">
+        <div class="flex-1 overflow-y-auto p-4 space-y-3">
 
             {{-- Stats row (horizontal scroll) --}}
-            <div id="modal-stats" class="no-scrollbar flex gap-3 overflow-x-auto border-b border-[#f1c39a]/40 px-5 py-4"></div>
+            <div id="modal-stats-wrap" class="hidden rounded-2xl border border-[#f1c39a]/50 bg-white/70 px-4 py-3">
+                <div id="modal-stats" class="no-scrollbar flex gap-3 overflow-x-auto"></div>
+            </div>
 
             {{-- Taste badges --}}
-            <div id="modal-taste-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+            <div id="modal-taste-wrap" class="hidden rounded-2xl border border-[#f1c39a]/50 bg-white/70 p-4">
                 <p class="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Flavour</p>
                 <div id="modal-taste" class="flex flex-wrap gap-2"></div>
             </div>
 
             {{-- Why this recipe --}}
-            <div id="modal-why-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+            <div id="modal-why-wrap" class="hidden rounded-2xl border border-[#f1c39a]/50 bg-white/70 p-4">
                 <p class="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Why this recipe?</p>
                 <ul id="modal-why" class="space-y-1 text-sm text-[#4a2b1d]"></ul>
             </div>
 
             {{-- Nutrition --}}
-            <div id="modal-nutrition-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+            <div id="modal-nutrition-wrap" class="hidden rounded-2xl border border-[#f1c39a]/50 bg-white/70 p-4">
                 <p class="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Nutrition per serving</p>
                 <div id="modal-nutrition" class="grid grid-cols-3 gap-2 sm:grid-cols-6"></div>
             </div>
 
             {{-- Ingredients --}}
-            <div id="modal-ingredients-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+            <div id="modal-ingredients-wrap" class="hidden rounded-2xl border border-[#f1c39a]/50 bg-white/70 p-4">
                 <p class="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Ingredients</p>
                 <ul id="modal-ingredients" class="space-y-2"></ul>
             </div>
 
             {{-- Instructions --}}
-            <div id="modal-instructions-wrap" class="hidden border-b border-[#f1c39a]/40 px-5 py-4">
+            <div id="modal-instructions-wrap" class="hidden rounded-2xl border border-[#f1c39a]/50 bg-white/70 p-4">
                 <p class="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a15a33]">Instructions</p>
                 <ol id="modal-instructions" class="space-y-4"></ol>
             </div>
 
             {{-- Footer link --}}
-            <div class="px-5 py-5">
-                <a id="modal-link" href="#" target="_blank" rel="noreferrer"
-                    class="flex w-full items-center justify-center gap-2 rounded-[1rem] border border-[#f1c39a] bg-[#fff7ed] py-3 text-sm font-medium text-[#7b4a34] transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]">
-                    View full recipe on Cookd
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
-                    </svg>
-                </a>
-            </div>
+            <a id="modal-link" href="#" target="_blank" rel="noreferrer"
+                class="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#f1c39a] bg-[#fff7ed] py-3 text-sm font-medium text-[#7b4a34] transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]">
+                View full recipe on Cookd
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
+                </svg>
+            </a>
         </div>
     </div>
 </div>
@@ -810,8 +808,6 @@ function closeSubModal() {
 }
 
 // ── Recipe detail modal ──────────────────────────────────────────
-var modalHls = null;
-
 function openRecipeModal(r) {
     state.activeRecipe = r;
     const modal = document.getElementById('recipe-modal');
@@ -885,6 +881,7 @@ function openRecipeModal(r) {
         div.innerHTML = '<p class="text-[10px] text-[#9a6a4c]">' + s.label + '</p><p class="mt-1 text-sm font-semibold text-[#4a2b1d]">' + s.value + '</p>';
         stats.appendChild(div);
     });
+    document.getElementById('modal-stats-wrap').classList.toggle('hidden', stats.children.length === 0);
 
     // Save/plan button state
     const saved = state.savedRecipes.has(dbId);
@@ -975,22 +972,14 @@ function openRecipeModal(r) {
         instructionsWrap.classList.add('hidden');
     }
 
-    // Media
-    var video     = document.getElementById('modal-video');
+    // Thumbnail
     var thumbnail = document.getElementById('modal-thumbnail');
-    var streamUrl = r.streaming_url;
     var thumbUrl  = r.rectangle_thumbail_url || r.square_thumbnail_url || '';
-    if (modalHls) { modalHls.destroy(); modalHls = null; }
-    video.src = ''; video.poster = thumbUrl;
-    if (streamUrl) {
-        thumbnail.style.display = 'none'; video.style.display = 'block';
-        if (Hls.isSupported()) { modalHls = new Hls(); modalHls.loadSource(streamUrl); modalHls.attachMedia(video); }
-        else if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = streamUrl; }
-    } else if (thumbUrl) {
-        video.style.display = 'none'; thumbnail.style.display = 'block';
+    if (thumbUrl) {
         thumbnail.src = thumbUrl; thumbnail.alt = r.title || '';
+        thumbnail.style.display = 'block';
     } else {
-        document.getElementById('modal-media').style.display = 'none';
+        thumbnail.style.display = 'none';
     }
 
     modal.classList.remove('hidden');
@@ -1005,11 +994,6 @@ function closeRecipeModal() {
     var modal = document.getElementById('recipe-modal');
     modal.classList.add('hidden'); modal.classList.remove('flex');
     document.body.style.overflow = '';
-    var video = document.getElementById('modal-video');
-    video.pause();
-    if (modalHls) { modalHls.destroy(); modalHls = null; }
-    video.src = '';
-    document.getElementById('modal-media').style.display = '';
     state.activeRecipe = null;
 }
 
