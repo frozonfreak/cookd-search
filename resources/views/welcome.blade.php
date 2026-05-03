@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Cookd</title>
+    <title>Rasa</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=space-grotesk:400,500,700|instrument-sans:400,500,600" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -14,7 +14,7 @@
 {{-- ─── Top Nav ─────────────────────────────────────────────────── --}}
 <nav class="sticky top-0 z-40 border-b border-[#f1c39a]/50 bg-[#fff7ed]/90 backdrop-blur">
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
-        <span class="font-['Space_Grotesk'] text-xl font-bold text-[#4a2b1d]">Cookd</span>
+        <span class="font-['Space_Grotesk'] text-xl font-bold text-[#4a2b1d]">Rasa</span>
         <div class="flex gap-1">
             <button onclick="showScreen('search')" id="tab-search"
                 class="nav-tab rounded-full px-4 py-2 text-sm font-medium transition">
