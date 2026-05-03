@@ -106,77 +106,113 @@
                                 '_cook_time'   => $recipe->cooking_time,
                                 '_ingredients' => $recipe->ingredients ?? [],
                             ]);
+                            $thumbUrl    = $recipe->raw_json['rectangle_thumbail_url'] ?? $recipe->raw_json['square_thumbnail_url'] ?? null;
+                            $cuisineTags = array_slice((array) ($recipe->raw_json['cuisines_name'] ?? []), 0, 1);
+                            $explanations = [];
+                            if ($recipe->cooking_time && $recipe->cooking_time <= 20) $explanations[] = 'Quick (' . $recipe->cooking_time . ' min)';
+                            if ($recipe->dietary) $explanations[] = ucfirst(str_replace('_', ' ', $recipe->dietary));
+                            $tp = $recipe->taste_profile ?? [];
+                            if (($tp['spicy'] ?? 0) >= 0.65) $explanations[] = 'Spicy';
+                            elseif (($tp['sweet'] ?? 0) >= 0.65) $explanations[] = 'Sweet';
+                            elseif (($tp['tangy'] ?? 0) >= 0.65) $explanations[] = 'Tangy';
+                            if ($recipe->protein && $recipe->protein >= 20) $explanations[] = 'High protein';
+                            elseif ($recipe->fat !== null && $recipe->fat <= 8) $explanations[] = 'Low oil';
                         @endphp
-                        <div class="group relative rounded-[1.75rem] border border-[#f1c39a] bg-white/78 p-5 transition hover:-translate-y-1 hover:border-[#f77737]/45 hover:bg-[#fff7ef]">
 
-                            {{-- Save button --}}
-                            <button type="button"
-                                onclick="toggleSave({{ $recipe->id }}, this)"
-                                data-id="{{ $recipe->id }}"
-                                class="save-btn absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-[#f1c39a] bg-white/80 text-lg transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]"
-                                aria-label="Save recipe">
-                                <span class="save-heart">🤍</span>
-                            </button>
+                        <div class="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-[#f1c39a] bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#f77737]/40 hover:shadow-md hover:shadow-[#f77737]/10">
 
-                            {{-- Card body (click = open detail) --}}
-                            <button type="button"
-                                onclick="openRecipeModal({{ json_encode($cardData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }})"
-                                class="w-full text-left">
-                                <div class="flex items-start justify-between gap-4 pr-8">
-                                    <div>
-                                        <p class="text-xs uppercase tracking-[0.26em] text-[#a15a33]">Recipe #{{ $recipe->id }}</p>
-                                        <h3 class="mt-2 font-['Space_Grotesk'] text-xl font-semibold text-[#4a2b1d] leading-snug">
+                            {{-- Thumbnail (if available) --}}
+                            @if ($thumbUrl)
+                            <div class="relative overflow-hidden" style="aspect-ratio:16/9">
+                                <img src="{{ $thumbUrl }}"
+                                     class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                                     alt="{{ $recipe->title }}" loading="lazy">
+                                <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                                {{-- Save button over image --}}
+                                <button type="button"
+                                    onclick="toggleSave({{ $recipe->id }}, this)"
+                                    data-id="{{ $recipe->id }}"
+                                    class="save-btn absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-base backdrop-blur-sm transition hover:bg-black/45"
+                                    aria-label="Save recipe">
+                                    <span class="save-heart">🤍</span>
+                                </button>
+                                {{-- Cook time badge --}}
+                                @if ($recipe->cooking_time)
+                                <div class="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                                    ⏱ {{ $recipe->cooking_time }} min
+                                </div>
+                                @endif
+                            </div>
+                            @endif
+
+                            <div class="flex flex-1 flex-col p-4">
+
+                                {{-- Save button (no-thumbnail fallback) --}}
+                                @if (!$thumbUrl)
+                                <button type="button"
+                                    onclick="toggleSave({{ $recipe->id }}, this)"
+                                    data-id="{{ $recipe->id }}"
+                                    class="save-btn absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-[#f1c39a] bg-white text-base transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]"
+                                    aria-label="Save recipe">
+                                    <span class="save-heart">🤍</span>
+                                </button>
+                                @endif
+
+                                {{-- Click area → open detail --}}
+                                <button type="button"
+                                    onclick="openRecipeModal({{ json_encode($cardData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }})"
+                                    class="flex-1 w-full text-left">
+
+                                    {{-- Title row --}}
+                                    <div class="{{ $thumbUrl ? '' : 'pr-10' }}">
+                                        @if (!$thumbUrl && $recipe->cooking_time)
+                                        <p class="mb-1 text-xs font-medium text-[#9b3d16]">⏱ {{ $recipe->cooking_time }} min</p>
+                                        @endif
+                                        <h3 class="font-['Space_Grotesk'] text-base font-semibold leading-snug text-[#4a2b1d] sm:text-[17px]">
                                             {{ $recipe->title }}
                                         </h3>
                                     </div>
-                                    @if ($recipe->cooking_time)
-                                        <div class="shrink-0 text-right">
-                                            <p class="text-xs uppercase tracking-[0.2em] text-[#a15a33]">Cook</p>
-                                            <p class="mt-1 text-lg font-semibold text-[#9b3d16]">{{ $recipe->cooking_time }}<span class="ml-0.5 text-xs font-normal">min</span></p>
-                                        </div>
-                                    @endif
-                                </div>
 
-                                {{-- Ingredient chips --}}
-                                <div class="mt-3 flex flex-wrap gap-2">
-                                    @foreach (array_slice($recipe->ingredients ?? [], 0, 6) as $ingredient)
-                                        <span class="rounded-full bg-[#fff3e8] px-3 py-1 text-xs font-medium text-[#7b4a34] ring-1 ring-inset ring-[#f4c8a0]/60">
+                                    {{-- Cuisine + dietary tags --}}
+                                    @if (!empty($cuisineTags) || $recipe->dietary)
+                                    <div class="mt-2 flex flex-wrap gap-1.5">
+                                        @foreach ($cuisineTags as $c)
+                                        <span class="rounded-full bg-[#fff3e8] px-2.5 py-0.5 text-[11px] font-medium text-[#7b4a34]">{{ $c }}</span>
+                                        @endforeach
+                                        @if ($recipe->dietary)
+                                        <span class="rounded-full bg-[#eaf5ea] px-2.5 py-0.5 text-[11px] font-medium text-[#3b6b43]">{{ ucfirst(str_replace('_', ' ', $recipe->dietary)) }}</span>
+                                        @endif
+                                    </div>
+                                    @endif
+
+                                    {{-- Ingredient chips --}}
+                                    <div class="mt-2.5 flex flex-wrap gap-1.5">
+                                        @foreach (array_slice($recipe->ingredients ?? [], 0, 5) as $ingredient)
+                                        <span class="rounded-full bg-[#fff3e8] px-2.5 py-0.5 text-xs font-medium text-[#7b4a34] ring-1 ring-inset ring-[#f4c8a0]/60">
                                             {{ ucfirst($ingredient) }}
                                         </span>
-                                    @endforeach
-                                    @if (count($recipe->ingredients ?? []) > 6)
-                                        <span class="rounded-full bg-[#f5f0eb] px-3 py-1 text-xs text-[#9a7a6a] ring-1 ring-inset ring-[#e8ddd5]">
-                                            +{{ count($recipe->ingredients) - 6 }} more
+                                        @endforeach
+                                        @if (count($recipe->ingredients ?? []) > 5)
+                                        <span class="rounded-full bg-[#f5f0eb] px-2.5 py-0.5 text-xs text-[#9a7a6a]">
+                                            +{{ count($recipe->ingredients) - 5 }}
                                         </span>
+                                        @endif
+                                    </div>
+
+                                    {{-- Good match --}}
+                                    @if (!empty($explanations))
+                                    <p class="mt-2.5 text-xs text-[#9b5a30]">✓ {{ implode(' · ', array_slice($explanations, 0, 2)) }}</p>
                                     @endif
-                                </div>
+                                </button>
 
-                                {{-- Good match explanation --}}
-                                @php
-                                    $explanations = [];
-                                    if ($recipe->cooking_time && $recipe->cooking_time <= 20) $explanations[] = 'Quick (' . $recipe->cooking_time . ' min)';
-                                    if ($recipe->dietary) $explanations[] = ucfirst(str_replace('_', ' ', $recipe->dietary));
-                                    $tp = $recipe->taste_profile ?? [];
-                                    if (($tp['spicy'] ?? 0) >= 0.65) $explanations[] = 'Spicy';
-                                    elseif (($tp['sweet'] ?? 0) >= 0.65) $explanations[] = 'Sweet';
-                                    elseif (($tp['tangy'] ?? 0) >= 0.65) $explanations[] = 'Tangy';
-                                    if ($recipe->protein && $recipe->protein >= 20) $explanations[] = 'High protein';
-                                    elseif ($recipe->fat !== null && $recipe->fat <= 8) $explanations[] = 'Low oil';
-                                @endphp
-                                @if (!empty($explanations))
-                                    <p class="mt-3 text-xs text-[#9b5a30]">
-                                        ✓ Good match · {{ implode(' · ', array_slice($explanations, 0, 2)) }}
-                                    </p>
-                                @endif
-                            </button>
-
-                            {{-- Add to Plan --}}
-                            <button type="button"
-                                onclick="addToPlan({{ json_encode($cardData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }})"
-                                data-plan-id="{{ $recipe->id }}"
-                                class="plan-btn mt-4 w-full rounded-[0.9rem] border border-[#f1c39a] bg-[#fff7ed] py-2 text-sm font-medium text-[#7b4a34] transition hover:border-[#f77737]/50 hover:bg-[#fff1e4] hover:text-[#9b3d16]">
-                                + Add to Plan
-                            </button>
+                                {{-- Add to Plan --}}
+                                <button type="button"
+                                    onclick="addToPlan({{ json_encode($cardData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }})"
+                                    data-plan-id="{{ $recipe->id }}"
+                                    class="plan-btn mt-3 flex w-full items-center justify-center gap-1 rounded-[0.9rem] bg-[#fff3e8] py-2.5 text-sm font-medium text-[#7b4a34] ring-1 ring-inset ring-[#f4c8a0]/60 transition hover:bg-[#ffe7d1] hover:ring-[#f77737]/40">
+                                    + Add to Plan
+                                </button>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -282,7 +318,7 @@
 {{-- ─── Recipe Detail Modal ────────────────────────────────────── --}}
 <div id="recipe-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true">
     <div id="modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeRecipeModal()"></div>
-    <div class="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-[#fffaf5] shadow-2xl">
+    <div class="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-[#fff7ed] shadow-2xl">
 
         {{-- Hero: media + title overlay --}}
         <div id="modal-media" class="relative flex-none bg-[#1a0a00]" style="aspect-ratio:16/9;min-height:180px">
@@ -306,7 +342,7 @@
         </div>
 
         {{-- Action strip --}}
-        <div class="flex flex-none items-center gap-2 border-b border-[#f1c39a]/50 bg-white/80 px-5 py-3 backdrop-blur">
+        <div class="flex flex-none items-center gap-2 border-b border-[#f1c39a]/50 bg-[#fff7ed] px-5 py-3">
             <button id="modal-save-btn" onclick="modalFeedback('save')"
                 class="flex items-center gap-1.5 rounded-full border border-[#f1c39a] bg-[#fff7ed] px-3 py-1.5 text-sm font-medium text-[#7b4a34] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
                 <span id="modal-save-heart">🤍</span><span class="hidden sm:inline">Save</span>
