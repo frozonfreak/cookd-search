@@ -15,6 +15,7 @@ class RecipeSearchService
         private readonly EmbeddingService $embeddingService,
         private readonly VectorSearchService $vectorSearchService,
         private readonly PersonalizationService $personalizationService,
+        private readonly ReinforcementRankingService $reinforcementRankingService,
     ) {
     }
 
@@ -187,7 +188,7 @@ class RecipeSearchService
         $query->selectRaw($scoreSql.' as total_score', $scoreBindings);
         $query->selectRaw($allScore.' as ingredient_score', $allBindings);
         $query->selectRaw('('.$allScore.' * '.$weights['w_all'].') as w_all_score', $allBindings);
-        $query->selectRaw('LEAST(100, GREATEST(0, ROUND((('.$scoreSql.') / '.$maxPossibleScore.') * 100, 0))) as display_score', [...$scoreBindings]);
+        $query->selectRaw('LEAST(100, GREATEST(0, ROUND(((('.$scoreSql.') / '.$maxPossibleScore.') * 100)::numeric, 0))) as display_score', [...$scoreBindings]);
     }
 
     /**
@@ -278,7 +279,12 @@ class RecipeSearchService
             ->sortByDesc(fn (Recipe $recipe) => (float) ($recipe->hybrid_score ?? $recipe->total_score ?? 0.0))
             ->values();
 
-        return $sorted->take($limit)->values();
+        $feedbackRanked = $this->reinforcementRankingService->rerank(
+            $sorted,
+            isset($dsl['personalization']['user_id']) ? (int) $dsl['personalization']['user_id'] : null
+        );
+
+        return $feedbackRanked->take($limit)->values();
     }
 
     /**

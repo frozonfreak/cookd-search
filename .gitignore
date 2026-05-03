@@ -21,6 +21,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+.claude/
+database/recipie
 database/recipie/1.json
 database/recipie/2.json
 database/recipie/3.json

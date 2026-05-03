@@ -40,6 +40,10 @@ class RecipeIngestionService
                 $recipeIngredients = $record['recipe_ingredients'];
                 unset($record['recipe_ingredients']);
 
+                if ($record['ingredients'] === []) {
+                    return;
+                }
+
                 $recipe = Recipe::query()->find($record['id']);
 
                 if ($recipe === null) {
@@ -133,6 +137,7 @@ class RecipeIngestionService
             'meal_type' => $mealType,
             'cuisine' => $cuisine,
             'cooking_time' => $this->normalizeNullableInt($payload['cooking_time'] ?? null),
+            'streaming_url' => $this->normalizeNullableString($payload['streaming_url'] ?? null),
             'dietary' => $dietary,
             'calories' => $this->extractNutritionValue($payload, 'calories'),
             'fat' => $this->extractNutritionValue($payload, 'fat'),
@@ -251,7 +256,11 @@ class RecipeIngestionService
      */
     private function extractNutritionValue(array $payload, string $key): ?float
     {
-        $value = data_get($payload, $key, data_get($payload, 'nutrition.'.$key));
+        $value = data_get($payload, $key,
+            data_get($payload, 'nutritional_values.'.$key,
+                data_get($payload, 'nutrition.'.$key)
+            )
+        );
 
         if ($value === null || $value === '') {
             return null;
@@ -363,6 +372,27 @@ class RecipeIngestionService
             return;
         }
 
+        $seen = [];
+        $deduped = array_filter($rows, function (array $row) use (&$seen): bool {
+            if (isset($seen[$row['ingredient_id']])) {
+                return false;
+            }
+            $seen[$row['ingredient_id']] = true;
+            return true;
+        });
+
+        $validIds = DB::table('ingredients')
+            ->whereIn('id', array_column($deduped, 'ingredient_id'))
+            ->pluck('id')
+            ->flip()
+            ->all();
+
+        $insertable = array_filter($deduped, fn (array $row) => isset($validIds[$row['ingredient_id']]));
+
+        if ($insertable === []) {
+            return;
+        }
+
         DB::table('recipe_ingredients')->insert(array_map(
             static fn (array $row): array => [
                 'recipe_id' => $recipeId,
@@ -371,7 +401,7 @@ class RecipeIngestionService
                 'quantity_text' => $row['quantity_text'],
                 'unit' => $row['unit'],
             ],
-            $rows
+            $insertable
         ));
     }
 

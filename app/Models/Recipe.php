@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use App\Casts\PgvectorCast;
 use App\Casts\PostgresIntegerArrayCast;
 use App\Casts\PostgresFloatArrayCast;
 use App\Casts\PostgresTextArrayCast;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'title',
@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
     'meal_type',
     'cuisine',
     'cooking_time',
+    'streaming_url',
     'dietary',
     'calories',
     'fat',
@@ -53,9 +54,14 @@ class Recipe extends Model
             'fat' => 'float',
             'protein' => 'float',
             'sodium' => 'float',
-            'embedding' => PgvectorCast::class,
+            'embedding' => PostgresFloatArrayCast::class,
             'semantic_embedding' => PostgresFloatArrayCast::class,
             'raw_json' => 'array',
         ];
+    }
+
+    public function recipeIngredients(): HasMany
+    {
+        return $this->hasMany(RecipeIngredient::class);
     }
 }

@@ -18,10 +18,6 @@ class RecipeSearchController extends Controller
     ): View
     {
         $query = trim((string) $request->query('q', ''));
-        $viewMode = (string) $request->query('view', 'detailed');
-        if (! in_array($viewMode, ['detailed', 'minimal'], true)) {
-            $viewMode = 'detailed';
-        }
         $parsed = null;
         $dsl = null;
         $context = null;
@@ -64,7 +60,6 @@ class RecipeSearchController extends Controller
             'context' => $context,
             'results' => $results,
             'tasteProfile' => $tasteProfile,
-            'viewMode' => $viewMode,
         ]);
     }
 }

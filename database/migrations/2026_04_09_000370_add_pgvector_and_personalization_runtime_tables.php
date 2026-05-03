@@ -13,9 +13,17 @@ return new class extends Migration
     public function up(): void
     {
         if (DB::getDriverName() === 'pgsql') {
-            DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
-            DB::statement('ALTER TABLE recipes ADD COLUMN IF NOT EXISTS embedding vector(1536)');
-            DB::statement('CREATE INDEX IF NOT EXISTS idx_recipes_embedding ON recipes USING ivfflat (embedding vector_cosine_ops)');
+            $vectorAvailable = DB::selectOne(
+                "SELECT 1 FROM pg_available_extensions WHERE name = 'vector'"
+            ) !== null;
+
+            if ($vectorAvailable) {
+                DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+                DB::statement('ALTER TABLE recipes ADD COLUMN IF NOT EXISTS embedding vector(1536)');
+                DB::statement('CREATE INDEX IF NOT EXISTS idx_recipes_embedding ON recipes USING ivfflat (embedding vector_cosine_ops)');
+            } else {
+                DB::statement('ALTER TABLE recipes ADD COLUMN IF NOT EXISTS embedding REAL[]');
+            }
         }
 
         if (! Schema::hasColumn('user_taste_profiles', 'taste_profile')) {
