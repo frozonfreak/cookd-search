@@ -12,26 +12,19 @@
 <body class="min-h-screen bg-[#fff7ed] text-[#3f2415]">
 
 {{-- ─── Top Nav ─────────────────────────────────────────────────── --}}
-<nav class="sticky top-0 z-40 border-b border-[#f1c39a]/50 bg-[#fff7ed]/90 backdrop-blur">
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
-        <span class="font-['Space_Grotesk'] text-xl font-bold text-[#4a2b1d]">Zaika</span>
-        <div class="flex gap-1">
-            <button onclick="showScreen('search')" id="tab-search"
-                class="nav-tab rounded-full px-4 py-2 text-sm font-medium transition">
-                Search
-            </button>
-            <button onclick="showScreen('meal-plan')" id="tab-meal-plan"
-                class="nav-tab relative rounded-full px-4 py-2 text-sm font-medium transition">
+<nav class="sticky top-0 z-40 border-b border-[#f1c39a]/40 bg-[#fff7ed]/95 backdrop-blur-sm">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+        <span class="font-['Space_Grotesk'] text-xl font-bold tracking-tight text-[#4a2b1d]">Zaika</span>
+        <div class="flex items-center gap-0.5 rounded-full bg-[#f1c39a]/25 p-1">
+            <button onclick="showScreen('search')" id="tab-search" class="nav-tab">Search</button>
+            <button onclick="showScreen('meal-plan')" id="tab-meal-plan" class="nav-tab relative">
                 Meal Plan
                 <span id="plan-badge"
-                    class="hidden absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#f77737] text-[10px] font-bold text-white">
+                    class="hidden absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#f77737] text-[10px] font-bold text-white">
                     0
                 </span>
             </button>
-            <button onclick="showScreen('grocery')" id="tab-grocery"
-                class="nav-tab rounded-full px-4 py-2 text-sm font-medium transition">
-                Grocery List
-            </button>
+            <button onclick="showScreen('grocery')" id="tab-grocery" class="nav-tab">Grocery</button>
         </div>
     </div>
 </nav>
@@ -117,76 +110,56 @@
                             elseif ($recipe->fat !== null && $recipe->fat <= 8) $explanations[] = 'Low oil';
                         @endphp
 
-                        <div class="group flex flex-col overflow-hidden rounded-[1.75rem] border border-[#f1c39a] bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#f77737]/40 hover:shadow-md hover:shadow-[#f77737]/10">
+                        <div class="group flex flex-col rounded-2xl border border-[#f1c39a]/80 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f77737]/50 hover:shadow-[0_8px_24px_rgba(247,119,55,0.10)] cursor-pointer"
+                             onclick="openRecipeModal({{ json_encode($cardData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }})">
 
-                            <div class="flex flex-1 flex-col p-4">
+                            {{-- Card body --}}
+                            <div class="flex-1 p-4">
+                                @if ($recipe->cooking_time)
+                                <p class="mb-1.5 text-[11px] font-medium text-[#9b3d16]">⏱ {{ $recipe->cooking_time }} min</p>
+                                @endif
+                                <h3 class="font-['Space_Grotesk'] text-[15px] font-semibold leading-snug text-[#2d1810]">{{ $recipe->title }}</h3>
 
-                                {{-- Title row: content + save side by side --}}
-                                <div class="flex items-start gap-2">
-
-                                    {{-- Click area → open detail --}}
-                                    <button type="button"
-                                        onclick="openRecipeModal({{ json_encode($cardData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }})"
-                                        class="flex-1 min-w-0 text-left">
-
-                                        {{-- Cook time + title --}}
-                                        <div>
-                                            @if ($recipe->cooking_time)
-                                            <p class="mb-1 text-xs font-medium text-[#9b3d16]">⏱ {{ $recipe->cooking_time }} min</p>
-                                            @endif
-                                            <h3 class="font-['Space_Grotesk'] text-base font-semibold leading-snug text-[#4a2b1d] sm:text-[17px]">
-                                                {{ $recipe->title }}
-                                            </h3>
-                                        </div>
-
-                                    {{-- Cuisine + dietary tags --}}
-                                    @if (!empty($cuisineTags) || $recipe->dietary)
-                                    <div class="mt-2 flex flex-wrap gap-1.5">
-                                        @foreach ($cuisineTags as $c)
-                                        <span class="rounded-full bg-[#fff3e8] px-2.5 py-0.5 text-[11px] font-medium text-[#7b4a34]">{{ $c }}</span>
-                                        @endforeach
-                                        @if ($recipe->dietary)
-                                        <span class="rounded-full bg-[#eaf5ea] px-2.5 py-0.5 text-[11px] font-medium text-[#3b6b43]">{{ ucfirst(str_replace('_', ' ', $recipe->dietary)) }}</span>
-                                        @endif
-                                    </div>
+                                @if (!empty($cuisineTags) || $recipe->dietary)
+                                <div class="mt-2.5 flex flex-wrap gap-1.5">
+                                    @foreach ($cuisineTags as $c)
+                                    <span class="rounded-full bg-[#fff3e8] px-2.5 py-0.5 text-[11px] font-medium text-[#7b4a34]">{{ $c }}</span>
+                                    @endforeach
+                                    @if ($recipe->dietary)
+                                    <span class="rounded-full bg-[#eaf5ea] px-2.5 py-0.5 text-[11px] font-medium text-[#3b6b43]">{{ ucfirst(str_replace('_', ' ', $recipe->dietary)) }}</span>
                                     @endif
+                                </div>
+                                @endif
 
-                                    {{-- Ingredient chips --}}
-                                    <div class="mt-2.5 flex flex-wrap gap-1.5">
-                                        @foreach (array_slice($recipe->ingredients ?? [], 0, 5) as $ingredient)
-                                        <span class="rounded-full bg-[#fff3e8] px-2.5 py-0.5 text-xs font-medium text-[#7b4a34] ring-1 ring-inset ring-[#f4c8a0]/60">
-                                            {{ ucfirst($ingredient) }}
-                                        </span>
-                                        @endforeach
-                                        @if (count($recipe->ingredients ?? []) > 5)
-                                        <span class="rounded-full bg-[#f5f0eb] px-2.5 py-0.5 text-xs text-[#9a7a6a]">
-                                            +{{ count($recipe->ingredients) - 5 }}
-                                        </span>
-                                        @endif
-                                    </div>
-
-                                    {{-- Good match --}}
-                                    @if (!empty($explanations))
-                                    <p class="mt-2.5 text-xs text-[#9b5a30]">✓ {{ implode(' · ', array_slice($explanations, 0, 2)) }}</p>
+                                @if (!empty($recipe->ingredients))
+                                <div class="mt-2 flex flex-wrap gap-1">
+                                    @foreach (array_slice($recipe->ingredients ?? [], 0, 4) as $ingredient)
+                                    <span class="rounded-full bg-[#faf5f0] px-2 py-0.5 text-[11px] text-[#9a6a4c] ring-1 ring-inset ring-[#f1c39a]/60">{{ ucfirst($ingredient) }}</span>
+                                    @endforeach
+                                    @if (count($recipe->ingredients ?? []) > 4)
+                                    <span class="rounded-full bg-[#f5f0eb] px-2 py-0.5 text-[11px] text-[#9a7a6a]">+{{ count($recipe->ingredients) - 4 }}</span>
                                     @endif
-                                    </button>{{-- end openRecipeModal button --}}
+                                </div>
+                                @endif
 
-                                    {{-- Save button --}}
-                                    <button type="button"
-                                        onclick="toggleSave({{ $recipe->id }}, this)"
-                                        data-id="{{ $recipe->id }}"
-                                        class="save-btn mt-0.5 shrink-0 flex h-8 w-8 items-center justify-center rounded-full border border-[#f1c39a] bg-white/80 text-base transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]"
-                                        aria-label="Save recipe">
-                                        <span class="save-heart">🤍</span>
-                                    </button>
+                                @if (!empty($explanations))
+                                <p class="mt-2.5 text-[11px] font-medium text-[#9b5a30]">✓ {{ implode(' · ', array_slice($explanations, 0, 2)) }}</p>
+                                @endif
+                            </div>
 
-                                </div>{{-- end title flex row --}}
-
-                                {{-- Add to Plan --}}
+                            {{-- Footer actions --}}
+                            <div class="flex items-center gap-2 border-t border-[#f1c39a]/50 px-3 py-2.5" onclick="event.stopPropagation()">
+                                <button type="button"
+                                    onclick="toggleSave({{ $recipe->id }}, this)"
+                                    data-id="{{ $recipe->id }}"
+                                    class="save-btn flex items-center gap-1.5 rounded-full border border-[#f1c39a] bg-white px-3 py-1.5 text-xs font-medium text-[#7b4a34] transition hover:border-[#f77737]/50 hover:bg-[#fff1e4]"
+                                    aria-label="Save recipe">
+                                    <span class="save-heart">🤍</span><span>Save</span>
+                                </button>
                                 <button type="button"
                                     onclick="addToPlan({{ json_encode($cardData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }})"
                                     data-plan-id="{{ $recipe->id }}"
-                                    class="plan-btn mt-3 flex w-full items-center justify-center gap-1 rounded-[0.9rem] bg-[#fff3e8] py-2.5 text-sm font-medium text-[#7b4a34] ring-1 ring-inset ring-[#f4c8a0]/60 transition hover:bg-[#ffe7d1] hover:ring-[#f77737]/40">
+                                    class="plan-btn flex-1 rounded-xl bg-[#fff3e8] py-1.5 text-center text-xs font-semibold text-[#7b4a34] ring-1 ring-inset ring-[#f4c8a0]/60 transition hover:bg-[#ffe7d1]">
                                     + Add to Plan
                                 </button>
                             </div>
@@ -460,9 +433,7 @@ async function apiPost(url, data) {
 function showScreen(name) {
     ['search', 'meal-plan', 'grocery'].forEach(s => {
         document.getElementById('screen-' + s).classList.toggle('hidden', s !== name);
-        document.getElementById('tab-' + s).classList.toggle('bg-[#f77737]', s === name);
-        document.getElementById('tab-' + s).classList.toggle('text-white', s === name);
-        document.getElementById('tab-' + s).classList.toggle('text-[#7b4a34]', s !== name);
+        document.getElementById('tab-' + s).classList.toggle('active', s === name);
     });
     state.currentScreen = name;
     if (name === 'meal-plan') renderMealPlan();
@@ -1062,8 +1033,23 @@ document.addEventListener('keydown', e => {
 </script>
 
 <style>
-    .nav-tab { color: #7b4a34; }
-    .nav-tab:hover { background: #fff1e4; color: #9b3d16; }
+    .nav-tab {
+        padding: 0.375rem 0.875rem;
+        border-radius: 9999px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #9a6a4c;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+        line-height: 1.5;
+    }
+    .nav-tab:hover { color: #4a2b1d; }
+    .nav-tab.active {
+        background: white;
+        color: #4a2b1d;
+        font-weight: 600;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px rgba(241,195,154,0.4);
+    }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
