@@ -88,7 +88,7 @@
                     @endphp
 
                     <a href="https://cookdtv.com/recipes/{{ $cookdId }}" target="_blank" rel="noreferrer"
-                       class="group flex flex-col rounded-2xl border border-[#f1c39a]/80 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f77737]/50 hover:shadow-[0_8px_24px_rgba(247,119,55,0.10)]">
+                       class="group flex flex-col rounded-[1.5rem] border border-[#f1c39a]/80 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f77737]/50 hover:shadow-[0_8px_24px_rgba(247,119,55,0.10)]">
 
                         <div class="flex-1 p-4">
                             @if ($recipe->cooking_time)
@@ -123,12 +123,6 @@
                             @endif
                         </div>
 
-                        <div class="flex items-center justify-between border-t border-[#f1c39a]/40 px-4 py-2.5">
-                            <span class="text-[11px] text-[#9a6a4c]">View on Cookd</span>
-                            <svg class="h-2.5 w-2.5 text-[#c4956a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
-                            </svg>
-                        </div>
                     </a>
                 @endforeach
             </div>
