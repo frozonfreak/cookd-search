@@ -43,7 +43,7 @@ class RecipeSearchController extends Controller
             $dsl = array_merge($context->dsl ?? [], [
                 'rewrite' => $context->rewrite,
                 'semantic' => [
-                    'query_text' => $context->rewrittenQuery ?? $context->cleanedQuery,
+                    'query_text' => $context->semantic['query_text'],
                     'query_embedding' => $context->semantic['query_embedding'],
                     'weight' => $context->semantic['weight'] ?? 0.35,
                 ],

@@ -64,10 +64,12 @@ class RecipeSearchService
         }
 
         if ($dsl['exclude'] !== []) {
-            $query->whereRaw(
-                'NOT (ingredients && ARRAY['.$this->placeholders($dsl['exclude']).']::text[])',
-                $dsl['exclude']
-            );
+            foreach ($dsl['exclude'] as $excludedTerm) {
+                $query->whereRaw(
+                    "NOT EXISTS (SELECT 1 FROM unnest(ingredients) AS _ing WHERE lower(_ing) ~ ('\\y' || lower(?) || '\\y'))",
+                    [$excludedTerm]
+                );
+            }
         }
 
         if ($dsl['include']['all'] !== []) {

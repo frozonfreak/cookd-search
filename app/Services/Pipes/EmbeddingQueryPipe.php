@@ -15,7 +15,15 @@ class EmbeddingQueryPipe
 
     public function handle(QueryContext $context, Closure $next): QueryContext
     {
-        $text = $context->rewrittenQuery ?? $context->cleanedQuery;
+        $positiveTerms = array_values(array_filter([
+            $context->entities['dish_type'] ?? null,
+            ...($context->entities['ingredients']['include_all'] ?? []),
+            ...($context->entities['ingredients']['include_any'] ?? []),
+            ...($context->entities['meal_type'] ?? []),
+        ]));
+        $text = $positiveTerms !== []
+            ? implode(' ', $positiveTerms)
+            : ($context->rewrittenQuery ?? $context->cleanedQuery);
 
         if ($text !== '') {
             $context->semantic['query_text'] = $text;

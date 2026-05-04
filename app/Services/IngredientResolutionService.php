@@ -38,7 +38,7 @@ class IngredientResolutionService
         return [
             'include_all' => $normalizedIncludeAll,
             'include_any' => array_values(array_unique([...$normalizedIncludeAny, ...$strongInclude, ...$weakInclude])),
-            'exclude' => array_values(array_unique([...$normalizedExclude, ...$strongExclude])),
+            'exclude' => array_values(array_unique([...$exclude, ...$normalizedExclude, ...$strongExclude])),
             'exact' => array_values(array_unique([...$normalizedIncludeAll, ...$normalizedIncludeAny, ...$normalizedExclude])),
             'strong_substitutes' => $strongInclude,
             'weak_substitutes' => $weakInclude,

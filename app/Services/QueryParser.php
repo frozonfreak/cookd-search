@@ -27,7 +27,26 @@ class QueryParser
 
         $strictIngredients = $this->extractIngredientSection($normalized, ['only', 'just']);
         $include = $this->extractIngredientSection($normalized, ['with', 'using']);
-        $includeAny = $this->extractIngredientSection($normalized, ['or']);
+
+        // "with chicken or paneer" captures "chicken or paneer" as one segment.
+        // Split on 'or' and route all parts to include_any (either is acceptable, not both required).
+        $orPromoted = [];
+        $trueInclude = [];
+        foreach ($include as $item) {
+            if (preg_match('/\bor\b/i', $item)) {
+                foreach (preg_split('/\s+or\s+/i', $item) ?: [] as $part) {
+                    $part = trim($part);
+                    if ($part !== '') {
+                        $orPromoted[] = $part;
+                    }
+                }
+            } else {
+                $trueInclude[] = $item;
+            }
+        }
+        $include = $trueInclude;
+
+        $includeAny = array_merge($orPromoted, $this->extractIngredientSection($normalized, ['or']));
         $exclude = $this->extractIngredientSection($normalized, ['without', 'no']);
         $inventory = $this->extractIngredientSection($normalized, ['i have', 'have']);
         $quantityConstraints = $this->extractQuantityConstraints($normalized);

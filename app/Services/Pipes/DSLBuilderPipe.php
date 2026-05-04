@@ -9,6 +9,16 @@ class DSLBuilderPipe
 {
     public function handle(QueryContext $context, Closure $next): QueryContext
     {
+        $positiveTerms = array_values(array_filter([
+            $context->entities['dish_type'],
+            ...($context->entities['ingredients']['include_all']),
+            ...($context->entities['ingredients']['include_any']),
+            ...($context->entities['meal_type']),
+        ]));
+        $semanticQueryText = $positiveTerms !== []
+            ? implode(' ', $positiveTerms)
+            : ($context->rewrittenQuery ?? $context->cleanedQuery);
+
         $context->dsl = [
             'include' => [
                 'all' => $context->entities['ingredients']['include_all'],
@@ -30,7 +40,7 @@ class DSLBuilderPipe
             'scoring' => $context->scoring,
             'rewrite' => $context->rewrite,
             'semantic' => [
-                'query_text' => $context->rewrittenQuery ?? $context->cleanedQuery,
+                'query_text' => $semanticQueryText,
                 'query_embedding' => $context->semantic['query_embedding'],
                 'weight' => $context->semantic['weight'] ?? 0.35,
             ],
