@@ -3,141 +3,204 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Zaika helps you find recipes by craving, pantry, time, and taste.">
     <title>Zaika</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=space-grotesk:400,500,700|instrument-sans:400,500,600" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|instrument-sans:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-[#fff7ed] text-[#3f2415]">
+<body class="min-h-screen bg-[#f7f4ef] text-[#17201b] antialiased">
+@php
+    $suggestions = [
+        ['Quick', 'quick breakfast under 15 min'],
+        ['High protein', 'high protein lunch with chicken or paneer'],
+        ['Low oil', 'low oil dinner vegetarian'],
+        ['No garlic', 'comfort food no garlic no onion'],
+        ['Tangy', 'spicy tangy curry'],
+        ['Pantry', 'dinner with rice chickpeas onion tomato'],
+    ];
+@endphp
 
-{{-- ─── Top Nav ─────────────────────────────────────────────────── --}}
-<nav class="sticky top-0 z-40 border-b border-[#f1c39a]/40 bg-[#fff7ed]/95 backdrop-blur-sm">
-    <div class="mx-auto flex max-w-7xl items-center px-6 py-4">
-        <span class="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-[#c2410c]">Zaika</span>
-    </div>
-</nav>
+<header class="sticky top-0 z-50 border-b border-[#d7ddd3]/70 bg-[#f7f4ef]/90 backdrop-blur-xl">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8 lg:px-10">
+        <a href="{{ route('home') }}" class="flex items-center gap-3">
+            <span class="grid size-9 place-items-center rounded-full bg-[#25352d] font-['Space_Grotesk'] text-sm font-bold text-white shadow-sm shadow-[#25352d]/15">Z</span>
+            <span class="font-['Space_Grotesk'] text-xl font-semibold tracking-tight text-[#25352d]">Zaika</span>
+        </a>
+        <a href="{{ route('home', ['q' => 'simple dinner under 30 min']) }}"
+           class="hidden rounded-full border border-[#cbd6cc] bg-white/65 px-4 py-2 text-sm font-medium text-[#52675a] transition hover:border-[#8ea596] hover:text-[#25352d] sm:inline-flex">
+            Dinner under 30
+        </a>
+    </nav>
+</header>
 
-<div class="relative overflow-hidden">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(252,175,69,0.34),_transparent_32%),radial-gradient(circle_at_82%_18%,_rgba(247,119,55,0.26),_transparent_24%),linear-gradient(180deg,_#fff7ed_0%,_#ffe4c7_48%,_#ffd2ad_100%)]"></div>
-    <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f77737]/50 to-transparent"></div>
+<main>
+    <section class="relative isolate overflow-hidden border-b border-[#dde3da]">
+        <div class="absolute inset-0 -z-20 bg-cover bg-[center_right_28%]"
+             style="background-image: url('{{ asset('images/landing-hero.png') }}');"></div>
+        <div class="absolute inset-0 -z-10 bg-[linear-gradient(90deg,_rgba(247,244,239,0.98)_0%,_rgba(247,244,239,0.94)_34%,_rgba(247,244,239,0.70)_58%,_rgba(247,244,239,0.20)_100%)]"></div>
+        <div class="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-[#f7f4ef] to-transparent"></div>
 
-    <main class="relative mx-auto max-w-7xl px-6 py-10 sm:px-10 lg:px-16">
+        <div class="mx-auto flex min-h-[calc(100svh-12rem)] max-w-7xl items-center px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
+            <div class="w-full max-w-3xl">
+                <p class="mb-4 inline-flex rounded-full border border-[#cbd6cc] bg-white/60 px-4 py-2 text-sm font-semibold text-[#5e7667] shadow-sm shadow-[#25352d]/5 backdrop-blur">
+                    Recipe search for real kitchens
+                </p>
+                <h1 class="font-['Space_Grotesk'] text-5xl font-bold leading-[0.95] tracking-tight text-[#1f2c25] sm:text-6xl lg:text-7xl">
+                    Zaika
+                </h1>
+                <p class="mt-5 max-w-2xl text-lg leading-8 text-[#526156] sm:text-xl">
+                    Find meals that fit your ingredients, cravings, time, and taste without fighting a noisy recipe page.
+                </p>
 
-        {{-- Search form + suggestion chips --}}
-        <section class="grid gap-10">
-            <div class="mx-auto w-full max-w-4xl">
-                <form method="GET" action="{{ route('home') }}" class="mt-4">
+                <form method="GET" action="{{ route('home') }}" class="mt-8 w-full max-w-2xl">
                     <label for="q" class="sr-only">Search recipes</label>
-                    <div class="rounded-[2rem] border border-[#f4b27f] bg-white/75 p-2 shadow-2xl shadow-[#f77737]/15 backdrop-blur">
-                        <div class="flex flex-col gap-3 rounded-[1.6rem] border border-[#ffe7d1] bg-[#fffaf5]/90 p-3 sm:flex-row sm:items-center">
-                            <input id="q" name="q" type="text"
-                                value="{{ $query }}"
-                                placeholder="chutney without coconut"
-                                class="w-full border-0 bg-transparent px-4 py-4 text-lg text-[#4a2b1d] outline-none placeholder:text-[#b48263]">
-                            <button type="submit"
-                                class="inline-flex items-center justify-center rounded-[1.2rem] bg-[#f77737] px-6 py-4 font-medium text-white transition hover:bg-[#f56040]">
-                                Search
-                            </button>
-                        </div>
+                    <div class="flex flex-col gap-3 rounded-[1.5rem] border border-white/80 bg-white/80 p-2 shadow-[0_24px_70px_rgba(31,44,37,0.12)] backdrop-blur md:flex-row md:items-center">
+                        <input id="q" name="q" type="search"
+                               value="{{ $query }}"
+                               placeholder="Try: chutney without coconut"
+                               class="min-h-14 flex-1 rounded-[1.1rem] border border-transparent bg-transparent px-4 text-base font-medium text-[#1f2c25] outline-none transition placeholder:text-[#8b968c] focus:border-[#b8c7ba] focus:bg-white/65 md:text-lg">
+                        <button type="submit"
+                                class="min-h-14 rounded-[1.1rem] bg-[#25352d] px-7 text-base font-semibold text-white shadow-sm shadow-[#25352d]/20 transition hover:bg-[#33463c] focus:outline-none focus:ring-4 focus:ring-[#91aa99]/35">
+                            Search
+                        </button>
                     </div>
                 </form>
 
-                {{-- Suggestion chips --}}
-                <div class="mt-5 flex flex-wrap gap-2 text-sm text-[#7b4a34]">
-                    @foreach ([
-                        ['Quick', 'quick breakfast under 15 min'],
-                        ['Breakfast', 'healthy breakfast high protein'],
-                        ['Low oil', 'low oil dinner vegetarian'],
-                        ['High protein', 'high protein lunch with chicken or paneer'],
-                        ['Spicy', 'spicy tangy curry'],
-                        ['No garlic', 'comfort food no garlic no onion'],
-                    ] as [$label, $q])
+                <div class="mt-5 flex max-w-3xl flex-wrap gap-2">
+                    @foreach ($suggestions as [$label, $q])
                         <a href="{{ route('home', ['q' => $q]) }}"
-                           class="rounded-full border border-[#f3c49d] bg-white/70 px-4 py-2 transition hover:border-[#f77737]/50 hover:bg-[#fff1e4] hover:text-[#9b3d16]">
+                           class="rounded-full border border-[#d7ddd3] bg-[#fbfaf7]/75 px-4 py-2 text-sm font-semibold text-[#52675a] shadow-sm shadow-[#25352d]/5 backdrop-blur transition hover:border-[#9eb4a6] hover:bg-white hover:text-[#25352d]">
                             {{ $label }}
                         </a>
                     @endforeach
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        {{-- Results --}}
-        @if ($results->isNotEmpty())
-        <section class="mt-12 mx-auto w-full max-w-4xl">
-            <div class="mb-6">
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#a15a33]">Results</p>
-                <h2 class="mt-2 font-['Space_Grotesk'] text-3xl font-bold text-[#5a2414]">
-                    {{ $results->count() }} matches for "{{ $query }}"
-                </h2>
+    <section class="bg-[#f7f4ef] px-5 py-8 sm:px-8 lg:px-10">
+        <div class="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
+            <div class="rounded-lg border border-[#dbe2d8] bg-white/55 p-5">
+                <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[#7e927f]">Pantry</p>
+                <p class="mt-2 text-lg font-semibold text-[#25352d]">Rice, chickpeas, onion, tomato</p>
             </div>
+            <div class="rounded-lg border border-[#dbe2d8] bg-white/55 p-5">
+                <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[#b06c5a]">Craving</p>
+                <p class="mt-2 text-lg font-semibold text-[#25352d]">Spicy, tangy, comforting</p>
+            </div>
+            <div class="rounded-lg border border-[#dbe2d8] bg-white/55 p-5">
+                <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[#8d7b48]">Time</p>
+                <p class="mt-2 text-lg font-semibold text-[#25352d]">Dinner under 30 minutes</p>
+            </div>
+        </div>
+    </section>
 
-            <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                @foreach ($results as $recipe)
-                    @php
-                        $cookdId     = $recipe->raw_json['id'] ?? $recipe->id;
-                        $cuisineTags = array_slice((array) ($recipe->raw_json['cuisines_name'] ?? []), 0, 1);
-                        $explanations = [];
-                        if ($recipe->cooking_time && $recipe->cooking_time <= 20) $explanations[] = 'Quick (' . $recipe->cooking_time . ' min)';
-                        if ($recipe->dietary) $explanations[] = ucfirst(str_replace('_', ' ', $recipe->dietary));
-                        $tp = $recipe->taste_profile ?? [];
-                        if (($tp['spicy'] ?? 0) >= 0.65) $explanations[] = 'Spicy';
-                        elseif (($tp['sweet'] ?? 0) >= 0.65) $explanations[] = 'Sweet';
-                        elseif (($tp['tangy'] ?? 0) >= 0.65) $explanations[] = 'Tangy';
-                        if ($recipe->protein && $recipe->protein >= 20) $explanations[] = 'High protein';
-                        elseif ($recipe->fat !== null && $recipe->fat <= 8) $explanations[] = 'Low oil';
-                    @endphp
+    @if ($results->isNotEmpty())
+        <section class="bg-[#eef2ec] px-5 py-12 sm:px-8 lg:px-10">
+            <div class="mx-auto max-w-7xl">
+                <div class="mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[#6f8375]">Results</p>
+                        <h2 class="mt-2 font-['Space_Grotesk'] text-3xl font-semibold tracking-tight text-[#1f2c25] sm:text-4xl">
+                            {{ $results->count() }} matches for "{{ $query }}"
+                        </h2>
+                    </div>
+                    <a href="{{ route('home') }}" class="text-sm font-semibold text-[#596e60] transition hover:text-[#25352d]">
+                        Clear search
+                    </a>
+                </div>
 
-                    <a href="https://cookdtv.com/recipes/{{ $cookdId }}" target="_blank" rel="noreferrer"
-                       class="group flex flex-col rounded-[1.5rem] border border-[#f1c39a]/80 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#f77737]/50 hover:shadow-[0_8px_24px_rgba(247,119,55,0.10)]">
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    @foreach ($results as $recipe)
+                        @php
+                            $cookdId = $recipe->raw_json['id'] ?? $recipe->id;
+                            $cuisineTags = array_slice((array) ($recipe->raw_json['cuisines_name'] ?? []), 0, 1);
+                            $ingredients = array_values((array) ($recipe->ingredients ?? []));
+                            $explanations = [];
 
-                        <div class="flex-1 p-4">
-                            @if ($recipe->cooking_time)
-                            <p class="mb-1.5 text-[11px] font-medium text-[#9b3d16]">⏱ {{ $recipe->cooking_time }} min</p>
-                            @endif
-                            <h3 class="font-['Space_Grotesk'] text-[15px] font-semibold leading-snug text-[#2d1810]">{{ $recipe->title }}</h3>
+                            if ($recipe->cooking_time && $recipe->cooking_time <= 20) {
+                                $explanations[] = 'Quick ' . $recipe->cooking_time . ' min';
+                            }
+
+                            if ($recipe->dietary) {
+                                $explanations[] = ucfirst(str_replace('_', ' ', $recipe->dietary));
+                            }
+
+                            $tp = $recipe->taste_profile ?? [];
+                            if (($tp['spicy'] ?? 0) >= 0.65) {
+                                $explanations[] = 'Spicy';
+                            } elseif (($tp['sweet'] ?? 0) >= 0.65) {
+                                $explanations[] = 'Sweet';
+                            } elseif (($tp['tangy'] ?? 0) >= 0.65) {
+                                $explanations[] = 'Tangy';
+                            }
+
+                            if ($recipe->protein && $recipe->protein >= 20) {
+                                $explanations[] = 'High protein';
+                            } elseif ($recipe->fat !== null && $recipe->fat <= 8) {
+                                $explanations[] = 'Low oil';
+                            }
+                        @endphp
+
+                        <a href="https://cookdtv.com/recipes/{{ $cookdId }}" target="_blank" rel="noreferrer"
+                           class="group flex min-h-64 flex-col rounded-lg border border-[#d4ddd2] bg-[#fbfaf7] p-5 shadow-sm shadow-[#25352d]/5 transition duration-200 hover:-translate-y-0.5 hover:border-[#9fb49f] hover:shadow-[0_18px_40px_rgba(37,53,45,0.10)]">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="min-w-0">
+                                    @if ($recipe->cooking_time)
+                                        <p class="mb-2 text-sm font-semibold text-[#b06c5a]">{{ $recipe->cooking_time }} min</p>
+                                    @endif
+                                    <h3 class="font-['Space_Grotesk'] text-xl font-semibold leading-snug text-[#1f2c25] transition group-hover:text-[#31483d]">
+                                        {{ $recipe->title }}
+                                    </h3>
+                                </div>
+                                <span class="mt-1 shrink-0 rounded-full border border-[#d7ddd3] px-3 py-1 text-xs font-bold text-[#6b7f71] transition group-hover:border-[#aebfaf]">
+                                    Open
+                                </span>
+                            </div>
 
                             @if (!empty($cuisineTags) || $recipe->dietary)
-                            <div class="mt-2.5 flex flex-wrap gap-1.5">
-                                @foreach ($cuisineTags as $c)
-                                <span class="rounded-full bg-[#fff3e8] px-2.5 py-0.5 text-[11px] font-medium text-[#7b4a34]">{{ $c }}</span>
-                                @endforeach
-                                @if ($recipe->dietary)
-                                <span class="rounded-full bg-[#eaf5ea] px-2.5 py-0.5 text-[11px] font-medium text-[#3b6b43]">{{ ucfirst(str_replace('_', ' ', $recipe->dietary)) }}</span>
-                                @endif
-                            </div>
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                    @foreach ($cuisineTags as $c)
+                                        <span class="rounded-full bg-[#eef4ed] px-3 py-1 text-xs font-semibold text-[#52675a]">{{ $c }}</span>
+                                    @endforeach
+                                    @if ($recipe->dietary)
+                                        <span class="rounded-full bg-[#f6e9e3] px-3 py-1 text-xs font-semibold text-[#9a5a4c]">{{ ucfirst(str_replace('_', ' ', $recipe->dietary)) }}</span>
+                                    @endif
+                                </div>
                             @endif
 
-                            @if (!empty($recipe->ingredients))
-                            <div class="mt-2 flex flex-wrap gap-1">
-                                @foreach (array_slice($recipe->ingredients ?? [], 0, 4) as $ingredient)
-                                <span class="rounded-full bg-[#faf5f0] px-2 py-0.5 text-[11px] text-[#9a6a4c] ring-1 ring-inset ring-[#f1c39a]/60">{{ ucfirst($ingredient) }}</span>
-                                @endforeach
-                                @if (count($recipe->ingredients ?? []) > 4)
-                                <span class="rounded-full bg-[#f5f0eb] px-2 py-0.5 text-[11px] text-[#9a7a6a]">+{{ count($recipe->ingredients) - 4 }}</span>
-                                @endif
-                            </div>
+                            @if (!empty($ingredients))
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                    @foreach (array_slice($ingredients, 0, 4) as $ingredient)
+                                        <span class="rounded-full border border-[#e1e2da] bg-white/70 px-3 py-1 text-xs font-medium text-[#687568]">{{ ucfirst($ingredient) }}</span>
+                                    @endforeach
+                                    @if (count($ingredients) > 4)
+                                        <span class="rounded-full border border-[#e1e2da] bg-[#f3f1ea] px-3 py-1 text-xs font-semibold text-[#7b7668]">+{{ count($ingredients) - 4 }}</span>
+                                    @endif
+                                </div>
                             @endif
 
                             @if (!empty($explanations))
-                            <p class="mt-2.5 text-[11px] font-medium text-[#9b5a30]">✓ {{ implode(' · ', array_slice($explanations, 0, 2)) }}</p>
+                                <p class="mt-auto pt-5 text-sm font-semibold text-[#52675a]">
+                                    {{ implode(' / ', array_slice($explanations, 0, 3)) }}
+                                </p>
                             @endif
-                        </div>
-
-                    </a>
-                @endforeach
+                        </a>
+                    @endforeach
+                </div>
             </div>
         </section>
-
-        @elseif ($query !== '')
-        <section class="mt-16 mx-auto w-full max-w-4xl text-center">
-            <p class="text-4xl">🍽️</p>
-            <p class="mt-4 font-['Space_Grotesk'] text-xl font-semibold text-[#5a2414]">No results found</p>
-            <p class="mt-2 text-[#9a6a4c]">Try a different search or use the suggestion chips above.</p>
+    @elseif ($query !== '')
+        <section class="bg-[#eef2ec] px-5 py-16 text-center sm:px-8 lg:px-10">
+            <div class="mx-auto max-w-2xl rounded-lg border border-[#d4ddd2] bg-[#fbfaf7] p-8 shadow-sm shadow-[#25352d]/5">
+                <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[#8d7b48]">No matches</p>
+                <h2 class="mt-3 font-['Space_Grotesk'] text-3xl font-semibold tracking-tight text-[#1f2c25]">Try another flavor trail</h2>
+                <p class="mt-3 text-base leading-7 text-[#647166]">A shorter query or one of the quick chips usually gets Zaika moving again.</p>
+            </div>
         </section>
-        @endif
-
-    </main>
-</div>
+    @endif
+</main>
 
 </body>
 </html>
