@@ -12,8 +12,8 @@
 
 {{-- ─── Top Nav ─────────────────────────────────────────────────── --}}
 <nav class="sticky top-0 z-40 border-b border-[#f1c39a]/40 bg-[#fff7ed]/95 backdrop-blur-sm">
-    <div class="mx-auto flex max-w-7xl items-center px-6 py-3">
-        <span class="font-['Space_Grotesk'] text-xl font-bold tracking-tight text-[#4a2b1d]">Zaika</span>
+    <div class="mx-auto flex max-w-7xl items-center px-6 py-4">
+        <span class="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-[#c2410c]">Zaika</span>
     </div>
 </nav>
 
