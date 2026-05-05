@@ -26,24 +26,8 @@ return new class extends Migration
         DB::statement('ALTER TABLE recipes ADD COLUMN ingredients_new TEXT[]');
         DB::statement('ALTER TABLE recipes ADD COLUMN ingredient_ids_new INTEGER[]');
 
-        DB::statement("
-            UPDATE recipes
-            SET ingredients_new = (
-                SELECT COALESCE(array_agg(value), ARRAY[]::TEXT[])
-                FROM jsonb_array_elements_text(ingredients)
-            )
-        ");
-
-        DB::statement("
-            UPDATE recipes
-            SET ingredient_ids_new = (
-                SELECT CASE
-                    WHEN ingredient_ids IS NULL THEN NULL
-                    ELSE COALESCE(array_agg(value::integer), ARRAY[]::INTEGER[])
-                END
-                FROM jsonb_array_elements_text(COALESCE(ingredient_ids, '[]'::jsonb))
-            )
-        ");
+        DB::statement('UPDATE recipes SET ingredients_new = ingredients');
+        DB::statement('UPDATE recipes SET ingredient_ids_new = ingredient_ids');
 
         DB::statement('ALTER TABLE recipes DROP COLUMN ingredients');
         DB::statement('ALTER TABLE recipes DROP COLUMN ingredient_ids');
