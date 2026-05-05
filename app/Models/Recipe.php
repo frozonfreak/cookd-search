@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use App\Casts\PostgresIntegerArrayCast;
+use App\Casts\EmbeddingCast;
 use App\Casts\PostgresFloatArrayCast;
+use App\Casts\PostgresIntegerArrayCast;
 use App\Casts\PostgresTextArrayCast;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -54,7 +55,7 @@ class Recipe extends Model
             'fat' => 'float',
             'protein' => 'float',
             'sodium' => 'float',
-            'embedding' => PostgresFloatArrayCast::class,
+            'embedding' => EmbeddingCast::class,
             'semantic_embedding' => PostgresFloatArrayCast::class,
             'raw_json' => 'array',
         ];
