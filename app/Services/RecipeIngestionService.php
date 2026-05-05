@@ -18,6 +18,94 @@ class RecipeIngestionService
     }
 
     /**
+     * Ingest from either a directory of JSON files or a single .ndjson file.
+     *
+     * @return array{processed:int, created:int, updated:int}
+     */
+    public function ingestFromSource(string $source): array
+    {
+        if (is_dir($source)) {
+            return $this->ingestDirectory($source);
+        }
+
+        if (str_ends_with($source, '.ndjson') && is_file($source)) {
+            return $this->ingestNdjson($source);
+        }
+
+        throw new RuntimeException("Unsupported source: {$source}");
+    }
+
+    /**
+     * Ingest from a newline-delimited JSON file (one recipe object per line).
+     *
+     * @return array{processed:int, created:int, updated:int}
+     */
+    public function ingestNdjson(string $path): array
+    {
+        if (! is_file($path)) {
+            throw new RuntimeException("NDJSON file not found: {$path}");
+        }
+
+        $processed = 0;
+        $created = 0;
+        $updated = 0;
+
+        $handle = fopen($path, 'r');
+
+        if ($handle === false) {
+            throw new RuntimeException("Cannot open NDJSON file: {$path}");
+        }
+
+        try {
+            while (($line = fgets($handle)) !== false) {
+                $line = trim($line);
+
+                if ($line === '') {
+                    continue;
+                }
+
+                try {
+                    $payload = json_decode($line, true, 512, JSON_THROW_ON_ERROR);
+                } catch (JsonException $e) {
+                    continue;
+                }
+
+                $record = $this->mapRecipe($payload);
+                $recipeIngredients = $record['recipe_ingredients'];
+                unset($record['recipe_ingredients']);
+
+                if ($record['ingredients'] === []) {
+                    continue;
+                }
+
+                $recipe = Recipe::query()->find($record['id']);
+
+                if ($recipe === null) {
+                    $recipe = new Recipe;
+                    $created++;
+                } else {
+                    $updated++;
+                }
+
+                $recipe->forceFill($record)->save();
+                $this->syncRecipeIngredients($recipe->id, $recipeIngredients);
+
+                $processed++;
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        $this->syncPrimaryKeySequence();
+
+        return [
+            'processed' => $processed,
+            'created' => $created,
+            'updated' => $updated,
+        ];
+    }
+
+    /**
      * @return array{processed:int, created:int, updated:int}
      */
     public function ingestDirectory(string $directory): array
