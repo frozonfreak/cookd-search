@@ -31,23 +31,24 @@
     <meta name="twitter:image" content="{{ asset('images/landing-hero.png') }}">
 
     <!-- Structured data: WebSite + Sitelinks Searchbox -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Zaika",
-        "url": "{{ route('home') }}",
-        "description": "Recipe search for real kitchens — search by ingredients, craving, time, and taste.",
-        "potentialAction": {
-            "@type": "SearchAction",
-            "target": {
-                "@type": "EntryPoint",
-                "urlTemplate": "{{ route('home') }}?q={search_term_string}"
-            },
-            "query-input": "required name=search_term_string"
-        }
-    }
-    </script>
+    @php
+        $jsonLd = json_encode([
+            '@context' => 'https://schema.org',
+            '@type'    => 'WebSite',
+            'name'     => 'Zaika',
+            'url'      => route('home'),
+            'description' => 'Recipe search for real kitchens — search by ingredients, craving, time, and taste.',
+            'potentialAction' => [
+                '@type'       => 'SearchAction',
+                'target'      => [
+                    '@type'       => 'EntryPoint',
+                    'urlTemplate' => route('home') . '?q={search_term_string}',
+                ],
+                'query-input' => 'required name=search_term_string',
+            ],
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    @endphp
+    <script type="application/ld+json">{!! $jsonLd !!}</script>
 
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link rel="preconnect" href="https://fonts.bunny.net">
