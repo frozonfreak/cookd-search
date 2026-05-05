@@ -1,11 +1,14 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/blank-livewire-starter-kit",
+    "name": "frozonfreak/cookd-search",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "A production-grade recipe search engine with NLP, pgvector semantic search, and personalised ranking.",
     "keywords": [
         "laravel",
-        "framework"
+        "recipe",
+        "search",
+        "pgvector",
+        "nlp"
     ],
     "license": "MIT",
     "require": {
