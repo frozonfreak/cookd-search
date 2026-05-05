@@ -16,8 +16,6 @@ return new class extends Migration
             $table->id();
             $table->text('title');
             $table->text('normalized_title')->nullable();
-            $table->addColumn('text[]', 'ingredients');
-            $table->addColumn('integer[]', 'ingredient_ids', ['nullable' => true]);
             $table->text('dish_type')->nullable();
             $table->jsonb('meal_type')->nullable();
             $table->jsonb('cuisine')->nullable();
@@ -27,6 +25,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        DB::statement('ALTER TABLE recipes ADD COLUMN ingredients text[] NOT NULL');
+        DB::statement('ALTER TABLE recipes ADD COLUMN ingredient_ids integer[]');
         DB::statement('ALTER TABLE recipes ADD CONSTRAINT recipes_ingredients_not_empty CHECK (cardinality(ingredients) > 0)');
         DB::statement('ALTER TABLE recipes ADD CONSTRAINT recipes_cooking_time_non_negative CHECK (cooking_time IS NULL OR cooking_time >= 0)');
     }
