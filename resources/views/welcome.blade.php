@@ -1,15 +1,64 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-KPCQDR35');</script>
+    <!-- End Google Tag Manager -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Zaika helps you find recipes by craving, pantry, time, and taste.">
-    <title>Zaika</title>
+
+    <title>{{ $query ? e($query) . ' – Zaika' : 'Zaika — Recipe Search for Real Kitchens' }}</title>
+    <meta name="description" content="{{ $query ? 'Found ' . $results->count() . ' recipes for "' . e($query) . '" on Zaika. Search by ingredients, cravings, time, and taste.' : 'Find meals that fit your ingredients, cravings, time, and taste. Zaika is recipe search for real kitchens — no ads, no clutter.' }}">
+    <meta name="robots" content="{{ $query ? 'noindex, follow' : 'index, follow' }}">
+    <link rel="canonical" href="{{ $query ? route('home', ['q' => $query]) : route('home') }}">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Zaika">
+    <meta property="og:url" content="{{ $query ? route('home', ['q' => $query]) : route('home') }}">
+    <meta property="og:title" content="{{ $query ? e($query) . ' – Zaika' : 'Zaika — Recipe Search for Real Kitchens' }}">
+    <meta property="og:description" content="Find meals that fit your ingredients, cravings, time, and taste. Zaika is recipe search for real kitchens — no ads, no clutter.">
+    <meta property="og:image" content="{{ asset('images/landing-hero.png') }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $query ? e($query) . ' – Zaika' : 'Zaika — Recipe Search for Real Kitchens' }}">
+    <meta name="twitter:description" content="Find meals that fit your ingredients, cravings, time, and taste. Zaika is recipe search for real kitchens.">
+    <meta name="twitter:image" content="{{ asset('images/landing-hero.png') }}">
+
+    <!-- Structured data: WebSite + Sitelinks Searchbox -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Zaika",
+        "url": "{{ route('home') }}",
+        "description": "Recipe search for real kitchens — search by ingredients, craving, time, and taste.",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "{{ route('home') }}?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=space-grotesk:500,600,700|instrument-sans:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-[#f7f4ef] text-[#17201b] antialiased">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KPCQDR35"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 @php
     $suggestions = [
         ['Quick', 'quick breakfast under 15 min'],
