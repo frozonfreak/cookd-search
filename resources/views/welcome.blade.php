@@ -103,13 +103,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     Find meals that fit your ingredients, cravings, time, and taste without fighting a noisy recipe page.
                 </p>
 
-                <form method="GET" action="{{ route('home') }}" class="mt-8 w-full max-w-2xl">
+                <form method="GET" action="{{ route('home') }}" class="mt-8 w-full max-w-2xl" id="search-form">
                     <label for="q" class="sr-only">Search recipes</label>
+                    <div id="voice-status" role="status" aria-live="polite" aria-atomic="true"
+                         class="sr-only"></div>
                     <div class="flex flex-col gap-3 rounded-[1.5rem] border border-white/80 bg-white/80 p-2 shadow-[0_24px_70px_rgba(31,44,37,0.12)] backdrop-blur md:flex-row md:items-center">
                         <input id="q" name="q" type="search"
                                value="{{ $query }}"
                                placeholder="Try: chutney without coconut"
                                class="min-h-14 flex-1 rounded-[1.1rem] border border-transparent bg-transparent px-4 text-base font-medium text-[#1f2c25] outline-none transition placeholder:text-[#8b968c] focus:border-[#b8c7ba] focus:bg-white/65 md:text-lg">
+                        <button type="button" id="voice-btn"
+                                aria-label="Search by voice"
+                                aria-pressed="false"
+                                hidden
+                                class="relative grid min-h-14 w-14 shrink-0 place-items-center self-stretch rounded-[1.1rem] border border-[#d7ddd3] bg-transparent text-[#52675a] transition hover:border-[#8ea596] hover:bg-[#f0f5f1] hover:text-[#25352d] focus:outline-none focus:ring-4 focus:ring-[#91aa99]/35 data-[state=listening]:border-[#25352d] data-[state=listening]:bg-[#25352d] data-[state=listening]:text-white data-[state=error]:border-[#c0503a] data-[state=error]:bg-[#fdf1ee] data-[state=error]:text-[#c0503a]">
+                            {{-- Idle: mic SVG --}}
+                            <svg id="voice-icon-idle" xmlns="http://www.w3.org/2000/svg"
+                                 viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                 class="size-5" aria-hidden="true">
+                                <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3Z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="22"/>
+                                <line x1="8"  y1="22" x2="16" y2="22"/>
+                            </svg>
+                            {{-- Listening: stop/square icon --}}
+                            <svg id="voice-icon-listening" xmlns="http://www.w3.org/2000/svg"
+                                 viewBox="0 0 24 24" fill="currentColor"
+                                 class="size-5 hidden" aria-hidden="true">
+                                <rect x="6" y="6" width="12" height="12" rx="2"/>
+                            </svg>
+                            {{-- Pulse ring (shown while listening) --}}
+                            <span id="voice-pulse"
+                                  class="absolute inset-0 hidden rounded-[1.1rem] animate-ping bg-[#25352d]/20"
+                                  aria-hidden="true"></span>
+                        </button>
                         <button type="submit"
                                 class="min-h-14 rounded-[1.1rem] bg-[#25352d] px-7 text-base font-semibold text-white shadow-sm shadow-[#25352d]/20 transition hover:bg-[#33463c] focus:outline-none focus:ring-4 focus:ring-[#91aa99]/35">
                             Search
