@@ -9,20 +9,15 @@ class DSLBuilderPipe
 {
     public function handle(QueryContext $context, Closure $next): QueryContext
     {
-        $positiveTerms = array_values(array_filter([
-            $context->entities['dish_type'],
-            ...($context->entities['ingredients']['include_all']),
-            ...($context->entities['ingredients']['include_any']),
-            ...($context->entities['meal_type']),
-        ]));
-        $semanticQueryText = $positiveTerms !== []
-            ? implode(' ', $positiveTerms)
-            : ($context->rewrittenQuery ?? $context->cleanedQuery);
+        // Always embed the full query so "egg" in "quick egg breakfast" is captured,
+        // not just the structured entities (which would produce "breakfast" only).
+        $semanticQueryText = $context->rewrittenQuery ?? $context->cleanedQuery;
 
         $context->dsl = [
             'include' => [
-                'all' => $context->entities['ingredients']['include_all'],
-                'any' => $context->entities['ingredients']['include_any'],
+                'all'         => $context->entities['ingredients']['include_all'],
+                'any'         => $context->entities['ingredients']['include_any'],
+                'free_tokens' => $context->entities['ingredients']['free_tokens'],
             ],
             'exclude' => $context->entities['ingredients']['exclude'],
             'ingredient_relations' => $context->entities['ingredient_relations'],

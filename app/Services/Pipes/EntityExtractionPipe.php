@@ -21,6 +21,7 @@ class EntityExtractionPipe
         $context->entities['ingredients']['include_any'] = $parsed['include_any'];
         $context->entities['ingredients']['exclude'] = $parsed['exclude'];
         $context->entities['ingredients']['quantity_constraints'] = $parsed['quantity_constraints'];
+        $context->entities['ingredients']['free_tokens'] = $parsed['free_tokens'];
         $context->entities['ingredients']['raw_detected'] = array_values(array_unique([
             ...$parsed['include'],
             ...$parsed['include_any'],

@@ -31,6 +31,7 @@ class QueryContext
                 'exclude' => [],
                 'raw_detected' => [],
                 'quantity_constraints' => [],
+                'free_tokens' => [],
             ],
             'ingredient_relations' => [
                 'exact' => [],

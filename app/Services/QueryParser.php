@@ -51,6 +51,9 @@ class QueryParser
         $inventory = $this->extractIngredientSection($normalized, ['i have', 'have']);
         $quantityConstraints = $this->extractQuantityConstraints($normalized);
 
+        $claimed = array_merge($include, $strictIngredients, $includeAny, $exclude, $inventory);
+        $freeTokens = $this->extractFreeTokens($normalized, $claimed);
+
         return [
             'dish_type' => $this->detectKeyword($normalized, [
                 'chutney',
@@ -74,6 +77,7 @@ class QueryParser
             'quantity_constraints' => $quantityConstraints,
             'nutrition' => $this->extractNutritionConstraints($normalized),
             'taste_preferences' => $this->extractTastePreferences($normalized),
+            'free_tokens' => $freeTokens,
         ];
     }
 
@@ -236,6 +240,51 @@ class QueryParser
         }
 
         return null;
+    }
+
+    /**
+     * Extract bare noun tokens that weren't captured by keyword-based extraction.
+     * These are likely ingredient hints (e.g. "egg" in "quick egg breakfast").
+     *
+     * @param  array<int, string>  $claimed  tokens already captured by structured extraction
+     * @return array<int, string>
+     */
+    private function extractFreeTokens(string $query, array $claimed): array
+    {
+        // Remove time expressions first
+        $stripped = (string) preg_replace('/\b(?:under|within|less than)\s+\d+\s*(?:min|mins|minute|minutes)\b/i', ' ', $query);
+        $stripped = (string) preg_replace('/\b\d+\s*(?:min|mins|minute|minutes)\b/i', ' ', $stripped);
+
+        // Words that are structural, not ingredients
+        $noise = [
+            'quick', 'fast', 'easy', 'ready', 'simple', 'tasty', 'healthy', 'light', 'crispy', 'warm', 'comforting',
+            'breakfast', 'lunch', 'dinner', 'snack', 'meal', 'brunch',
+            'recipe', 'recipes', 'dish', 'food', 'cuisine', 'style',
+            'with', 'using', 'without', 'no', 'only', 'just',
+            'and', 'or', 'but', 'for', 'in', 'a', 'an', 'the', 'to', 'of', 'at', 'as',
+            'under', 'within', 'about', 'around', 'some', 'make',
+            'i', 'me', 'my', 'have', 'want', 'need', 'give', 'suggest',
+            'high', 'low', 'protein', 'calorie', 'calories', 'fat', 'oil', 'sodium',
+            'spicy', 'tangy', 'sweet', 'rich', 'savory', 'creamy', 'mild', 'hot',
+            'chutney', 'curry', 'gravy', 'rice', 'biryani', 'salad', 'soup', 'fry', 'masala',
+        ];
+
+        foreach ($noise as $word) {
+            $stripped = (string) preg_replace('/\b'.preg_quote($word, '/').'\b/i', ' ', $stripped);
+        }
+
+        $stripped = (string) preg_replace('/\s{2,}/', ' ', trim($stripped));
+        $tokens   = array_filter(
+            preg_split('/\s+/', $stripped) ?: [],
+            static fn (string $t) => strlen($t) >= 3 && ! is_numeric($t)
+        );
+
+        $claimedLower = array_map('strtolower', $claimed);
+
+        return $this->uniqueIngredients(array_values(array_filter(
+            $tokens,
+            static fn (string $t) => ! in_array(strtolower($t), $claimedLower, true)
+        )));
     }
 
     /**

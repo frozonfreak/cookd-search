@@ -137,6 +137,18 @@ class RecipeSearchService
             $anyBindings = $anyTerms;
         }
 
+        // Soft hint scoring: bare ingredient tokens not captured by keyword extraction
+        // (e.g. "egg" in "quick egg breakfast"). Uses word-boundary regex so "egg" matches
+        // "eggs", "egg yolk", etc. Binary 0/1 — no hard WHERE filter.
+        $hintTerms = array_values($dsl['include']['free_tokens'] ?? []);
+        $hintsScore = '0';
+        $hintsBindings = [];
+        if ($hintTerms !== []) {
+            $pattern = implode('|', array_map('strtolower', $hintTerms));
+            $hintsScore = "CASE WHEN EXISTS (SELECT 1 FROM unnest(ingredients) AS _ing WHERE lower(_ing) ~ ('\\y(' || ? || ')\\y')) THEN 1.0 ELSE 0.0 END";
+            $hintsBindings = [$pattern];
+        }
+
         $timeScore = '0';
         $timeBindings = [];
         if ($dsl['time']['max'] !== null) {
@@ -161,10 +173,12 @@ class RecipeSearchService
             'w_rec' => 0.5,
             'exclude_penalty' => 1.0,
         ];
+        $hintWeight = (float) ($weights['w_hints'] ?? 0.8);
 
         $query
             ->selectRaw("{$allScore} as all_match_ratio", $allBindings)
             ->selectRaw("{$anyScore} as any_match_ratio", $anyBindings)
+            ->selectRaw("{$hintsScore} as hints_score", $hintsBindings)
             ->selectRaw("{$quantityScore} as quantity_score", $quantityBindings)
             ->selectRaw("{$nutritionScore} as nutrition_score", $nutritionBindings)
             ->selectRaw("{$tasteScore} as taste_score", $tasteBindings)
@@ -172,11 +186,12 @@ class RecipeSearchService
             ->selectRaw("{$popularityScore} as popularity_score")
             ->selectRaw("{$recencyScore} as recency_score");
 
-        $scoreSql = '(('.$allScore.' * '.$weights['w_all'].') + ('.$anyScore.' * '.$weights['w_any'].') + ('.$quantityScore.' * '.$weights['w_quantity'].') + ('.$nutritionScore.' * '.$weights['w_nutrition'].') + ('.$tasteScore.' * '.$weights['w_taste'].') + ('.$timeScore.' * '.$weights['w_time'].') + ('.$popularityScore.' * '.$weights['w_pop'].') + ('.$recencyScore.' * '.$weights['w_rec'].')) * '.$weights['exclude_penalty'];
+        $scoreSql = '(('.$allScore.' * '.$weights['w_all'].') + ('.$anyScore.' * '.$weights['w_any'].') + ('.$hintsScore.' * '.$hintWeight.') + ('.$quantityScore.' * '.$weights['w_quantity'].') + ('.$nutritionScore.' * '.$weights['w_nutrition'].') + ('.$tasteScore.' * '.$weights['w_taste'].') + ('.$timeScore.' * '.$weights['w_time'].') + ('.$popularityScore.' * '.$weights['w_pop'].') + ('.$recencyScore.' * '.$weights['w_rec'].')) * '.$weights['exclude_penalty'];
         $maxPossibleScore = max(
             0.0001,
             (float) $weights['w_all']
             + (float) $weights['w_any']
+            + ($hintTerms !== [] ? $hintWeight : 0.0)
             + (float) $weights['w_quantity']
             + (float) $weights['w_nutrition']
             + (float) $weights['w_taste']
@@ -185,7 +200,7 @@ class RecipeSearchService
             + (float) $weights['w_rec']
         );
 
-        $scoreBindings = [...$allBindings, ...$anyBindings, ...$quantityBindings, ...$nutritionBindings, ...$tasteBindings, ...$timeBindings];
+        $scoreBindings = [...$allBindings, ...$anyBindings, ...$hintsBindings, ...$quantityBindings, ...$nutritionBindings, ...$tasteBindings, ...$timeBindings];
 
         $query->selectRaw($scoreSql.' as total_score', $scoreBindings);
         $query->selectRaw($allScore.' as ingredient_score', $allBindings);
@@ -346,8 +361,9 @@ class RecipeSearchService
         if (isset($dsl['include']['all'])) {
             return [
                 'include' => [
-                    'all' => array_values($dsl['include']['all']),
-                    'any' => array_values($dsl['include']['any'] ?? []),
+                    'all'         => array_values($dsl['include']['all']),
+                    'any'         => array_values($dsl['include']['any'] ?? []),
+                    'free_tokens' => array_values($dsl['include']['free_tokens'] ?? []),
                 ],
                 'exclude' => array_values($dsl['exclude'] ?? []),
                 'ingredient_relations' => $dsl['ingredient_relations'] ?? [
@@ -388,8 +404,9 @@ class RecipeSearchService
 
         return [
             'include' => [
-                'all' => array_values($dsl['include'] ?? []),
-                'any' => [],
+                'all'         => array_values($dsl['include'] ?? []),
+                'any'         => [],
+                'free_tokens' => [],
             ],
             'exclude' => array_values($dsl['exclude'] ?? []),
             'ingredient_relations' => $dsl['ingredient_relations'] ?? [
