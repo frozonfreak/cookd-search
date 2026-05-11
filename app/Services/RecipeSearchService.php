@@ -72,6 +72,20 @@ class RecipeSearchService
             }
         }
 
+        // When a free-token hint (e.g. "egg") is present, exclude recipes whose
+        // normalized title signals the ingredient is absent ("eggless", "egg-free").
+        foreach (array_values($dsl['include']['free_tokens'] ?? []) as $hintTerm) {
+            $base = strtolower((string) $hintTerm);
+            $query->whereRaw(
+                "lower(normalized_title) !~ ('\\y' || ? || '\\y')",
+                [$base.'less']
+            );
+            $query->whereRaw(
+                "lower(normalized_title) !~ ('\\y' || ? || '[- ]free\\y')",
+                [$base]
+            );
+        }
+
         if ($dsl['include']['all'] !== []) {
             $query->whereRaw(
                 'ingredients @> ARRAY['.$this->placeholders($dsl['include']['all']).']::text[]',
