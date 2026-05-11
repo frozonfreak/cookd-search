@@ -62,12 +62,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 @php
     $suggestions = [
-        ['Quick', 'quick breakfast under 15 min'],
-        ['High protein', 'high protein lunch with chicken or paneer'],
-        ['Low oil', 'low oil dinner vegetarian'],
-        ['No garlic', 'comfort food no garlic no onion'],
-        ['Tangy', 'spicy tangy curry'],
-        ['Pantry', 'dinner with rice chickpeas onion tomato'],
+        ['No onion garlic',   'tasty dal or curry with no onion and no garlic'],
+        ['Eggs in 10 min',    'quick egg breakfast ready in under 10 minutes'],
+        ['Leftover roti',     'recipe to use up leftover rotis'],
+        ['Post-workout',      'high protein meal under 400 calories chicken or paneer'],
+        ['Weeknight curry',   'easy chicken curry ready in 30 minutes'],
+        ['Something sweet',   'quick Indian dessert under 20 minutes'],
     ];
 @endphp
 
@@ -159,18 +159,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <section class="bg-[#f7f4ef] px-5 py-8 sm:px-8 lg:px-10">
         <div class="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
-            <div class="rounded-lg border border-[#dbe2d8] bg-white/55 p-5">
+            <a href="{{ route('home', ['q' => 'dinner with leftover rice coconut milk and green chillies']) }}"
+               class="group rounded-lg border border-[#dbe2d8] bg-white/55 p-5 transition hover:border-[#9eb4a6] hover:bg-white/80">
                 <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[#7e927f]">Pantry</p>
-                <p class="mt-2 text-lg font-semibold text-[#25352d]">Rice, chickpeas, onion, tomato</p>
-            </div>
-            <div class="rounded-lg border border-[#dbe2d8] bg-white/55 p-5">
+                <p class="mt-2 text-lg font-semibold text-[#25352d] group-hover:text-[#31483d]">Leftover rice, coconut milk, green chillies</p>
+            </a>
+            <a href="{{ route('home', ['q' => 'something creamy mildly spicy and comforting for dinner']) }}"
+               class="group rounded-lg border border-[#dbe2d8] bg-white/55 p-5 transition hover:border-[#9eb4a6] hover:bg-white/80">
                 <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[#b06c5a]">Craving</p>
-                <p class="mt-2 text-lg font-semibold text-[#25352d]">Spicy, tangy, comforting</p>
-            </div>
-            <div class="rounded-lg border border-[#dbe2d8] bg-white/55 p-5">
+                <p class="mt-2 text-lg font-semibold text-[#25352d] group-hover:text-[#31483d]">Something creamy, mildly spicy, comforting</p>
+            </a>
+            <a href="{{ route('home', ['q' => 'easy weeknight dinner ready in 20 minutes']) }}"
+               class="group rounded-lg border border-[#dbe2d8] bg-white/55 p-5 transition hover:border-[#9eb4a6] hover:bg-white/80">
                 <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[#8d7b48]">Time</p>
-                <p class="mt-2 text-lg font-semibold text-[#25352d]">Dinner under 30 minutes</p>
-            </div>
+                <p class="mt-2 text-lg font-semibold text-[#25352d] group-hover:text-[#31483d]">Weeknight dinner, ready in 20 min</p>
+            </a>
         </div>
     </section>
 
