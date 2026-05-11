@@ -86,13 +86,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <main>
     <section class="relative isolate overflow-hidden border-b border-[#dde3da]">
+        @if (!$query)
         <div class="absolute inset-0 -z-20 bg-cover bg-[center_right_28%]"
              style="background-image: url('{{ asset('images/landing-hero.png') }}');"></div>
         <div class="absolute inset-0 -z-10 bg-[linear-gradient(90deg,_rgba(247,244,239,0.98)_0%,_rgba(247,244,239,0.94)_34%,_rgba(247,244,239,0.70)_58%,_rgba(247,244,239,0.20)_100%)]"></div>
         <div class="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-[#f7f4ef] to-transparent"></div>
+        @endif
 
-        <div class="mx-auto flex min-h-[calc(100svh-12rem)] max-w-7xl items-center px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
-            <div class="w-full max-w-3xl">
+        <div class="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 {{ $query ? 'py-5' : 'flex min-h-[calc(100svh-12rem)] items-center py-12 sm:py-16' }}">
+            <div class="{{ $query ? 'w-full max-w-2xl' : 'w-full max-w-3xl' }}">
+                @if (!$query)
                 <p class="mb-4 inline-flex rounded-full border border-[#cbd6cc] bg-white/60 px-4 py-2 text-sm font-semibold text-[#5e7667] shadow-sm shadow-[#25352d]/5 backdrop-blur">
                     Recipe search for real kitchens
                 </p>
@@ -102,8 +105,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <p class="mt-5 max-w-2xl text-lg leading-8 text-[#526156] sm:text-xl">
                     Find meals that fit your ingredients, cravings, time, and taste without fighting a noisy recipe page.
                 </p>
+                @endif
 
-                <form method="GET" action="{{ route('home') }}" class="mt-8 w-full max-w-2xl" id="search-form">
+                <form method="GET" action="{{ route('home') }}" class="{{ $query ? '' : 'mt-8' }} w-full max-w-2xl" id="search-form">
                     <label for="q" class="sr-only">Search recipes</label>
                     <div id="voice-status" role="status" aria-live="polite" aria-atomic="true"
                          class="sr-only"></div>
@@ -145,6 +149,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                 </form>
 
+                @if (!$query)
                 <div class="mt-5 flex max-w-3xl flex-wrap gap-2">
                     @foreach ($suggestions as [$label, $q])
                         <a href="{{ route('home', ['q' => $q]) }}"
@@ -153,10 +158,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </a>
                     @endforeach
                 </div>
+                @endif
             </div>
         </div>
     </section>
 
+    @if (!$query)
     <section class="bg-[#f7f4ef] px-5 py-8 sm:px-8 lg:px-10">
         <div class="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
             <a href="{{ route('home', ['q' => 'dinner with leftover rice coconut milk and green chillies']) }}"
@@ -176,6 +183,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </a>
         </div>
     </section>
+    @endif
 
     @if ($results->isNotEmpty())
         <section class="bg-[#eef2ec] px-5 py-12 sm:px-8 lg:px-10">
