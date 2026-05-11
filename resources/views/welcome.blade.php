@@ -94,7 +94,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         @endif
 
         <div class="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 {{ $query ? 'py-5' : 'flex min-h-[calc(100svh-12rem)] items-center py-12 sm:py-16' }}">
-            <div class="{{ $query ? 'w-full max-w-2xl' : 'w-full max-w-3xl' }}">
+            <div class="{{ $query ? 'mx-auto w-full max-w-2xl' : 'w-full max-w-3xl' }}">
                 @if (!$query)
                 <p class="mb-4 inline-flex rounded-full border border-[#cbd6cc] bg-white/60 px-4 py-2 text-sm font-semibold text-[#5e7667] shadow-sm shadow-[#25352d]/5 backdrop-blur">
                     Recipe search for real kitchens
